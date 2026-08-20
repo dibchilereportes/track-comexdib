@@ -147,6 +147,11 @@ function aplicarFiltros(data) {
   });
 }
 
+function urlNaviera(nombreNaviera) {
+  const cfg = configNavieras.find(n => n.Naviera === nombreNaviera);
+  return cfg ? cfg.URLTracking : '';
+}
+
 function renderTabla() {
   const filtrados = aplicarFiltros(maestro);
   const tbody = document.getElementById('tablaBody');
@@ -156,7 +161,12 @@ function renderTabla() {
     return;
   }
 
-  tbody.innerHTML = filtrados.map(c => `
+  tbody.innerHTML = filtrados.map(c => {
+    const url = urlNaviera(c.Naviera);
+    const linkTracking = url
+      ? `<a href="${url}" target="_blank" rel="noopener" class="link-tracking" title="Abrir sitio de ${c.Naviera}">Ver tracking ↗</a>`
+      : '';
+    return `
     <tr>
       <td><strong>${c.Contenedor || ''}</strong></td>
       <td>${c.MasterBL || ''}</td>
@@ -171,9 +181,10 @@ function renderTabla() {
       <td>${badgeEstado(c.EstadoActual)}${(c.PendienteRevision === true || c.PendienteRevision === 'TRUE') ? '<div class="pill-pendiente">pendiente revisión</div>' : ''}</td>
       <td>${badgeRetraso(c)}</td>
       <td>${c.FechaUltimoUpdate || ''}</td>
-      <td class="row-actions"><button data-id="${c.ID}" class="btnEditarEstado">Actualizar</button></td>
+      <td class="row-actions">${linkTracking}<button data-id="${c.ID}" class="btnEditarEstado">Actualizar</button></td>
     </tr>
-  `).join('');
+  `;
+  }).join('');
 
   document.querySelectorAll('.btnEditarEstado').forEach(btn => {
     btn.addEventListener('click', () => abrirModalEstado(btn.dataset.id));
@@ -241,8 +252,10 @@ function abrirModalEstado(id) {
   const c = maestro.find(m => m.ID === id);
   if (!c) return;
   idEnEdicion = id;
-  document.getElementById('estadoContenedorLabel').textContent =
-    `${c.Contenedor || c.MasterBL} — ${c.Naviera || ''}`;
+  const url = urlNaviera(c.Naviera);
+  document.getElementById('estadoContenedorLabel').innerHTML =
+    `${c.Contenedor || c.MasterBL} — ${c.Naviera || ''}` +
+    (url ? ` · <a href="${url}" target="_blank" rel="noopener">Abrir sitio de la naviera ↗</a>` : '');
   document.getElementById('e_estado').value = c.EstadoActual;
   document.getElementById('e_eta').value = c.ETA_Actual || '';
   document.getElementById('e_notas').value = '';

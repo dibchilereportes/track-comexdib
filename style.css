@@ -239,6 +239,12 @@ tbody tr:hover { background: rgba(42,120,214,0.05); }
   font-weight: 600;
 }
 
+.row-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .row-actions button {
   border: 1px solid var(--border);
   background: transparent;
@@ -248,6 +254,15 @@ tbody tr:hover { background: rgba(42,120,214,0.05); }
   font-size: 12px;
   cursor: pointer;
 }
+
+.link-tracking {
+  color: var(--series-1);
+  font-size: 12px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.link-tracking:hover { text-decoration: underline; }
 
 /* ---------- Modal ---------- */
 
