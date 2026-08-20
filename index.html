@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TRACK COMEXDIB</title>
+<link rel="icon" href="logo.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="app-header">
+  <div class="header-brand">
+    <img src="logo.png" alt="Logo DIB" class="brand-logo">
+    <div>
+      <h1>TRACK COMEXDIB</h1>
+      <p>San Antonio / Valparaíso — DIB &amp; Decoexpress</p>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <div id="configBanner" class="config-banner">
+    Falta configurar la URL del backend. Edita <code>app.js</code> y reemplaza
+    <code>API_URL</code> por la URL de tu Apps Script Web App (ver README).
+  </div>
+
+  <div class="kpi-row" id="kpiRow"></div>
+
+  <div class="filters">
+    <select id="filtroNaviera"><option value="">Todas las navieras</option></select>
+    <select id="filtroEstado"><option value="">Todos los estados</option></select>
+    <select id="filtroRetraso">
+      <option value="">Todos</option>
+      <option value="si">Solo retrasados</option>
+      <option value="no">Solo a tiempo</option>
+    </select>
+    <input type="text" id="filtroTexto" placeholder="Buscar contenedor / BL / booking / PO">
+    <button class="btn" id="btnNuevo">+ Nuevo contenedor</button>
+    <button class="btn secondary" id="btnRefrescar">Actualizar</button>
+  </div>
+
+  <div class="table-card">
+    <table>
+      <thead>
+        <tr>
+          <th>Contenedor</th>
+          <th>Master BL</th>
+          <th>Booking</th>
+          <th>Naviera</th>
+          <th>PO</th>
+          <th>Proveedor</th>
+          <th>Puerto</th>
+          <th>ETA original</th>
+          <th>ETA actual</th>
+          <th>Estado</th>
+          <th>Retraso</th>
+          <th>Últ. update</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="tablaBody">
+        <tr><td colspan="13" class="empty-state">Cargando…</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</main>
+
+<!-- Modal: nuevo contenedor -->
+<div class="modal-overlay" id="modalNuevo">
+  <div class="modal">
+    <h2>Nuevo contenedor / BL</h2>
+    <p style="color:var(--text-secondary);font-size:12px;margin-top:-6px;">
+      Solo el contenedor (o el BL) y la naviera son necesarios para empezar.
+      El resto lo vas completando cuando lo sepas.
+    </p>
+    <div class="field"><label>Contenedor</label><input id="f_contenedor" placeholder="MSCU1234567"></div>
+    <div class="field"><label>Naviera</label><input id="f_naviera" list="listaNavieras" placeholder="Maersk, MSC, CMA CGM..."></div>
+    <datalist id="listaNavieras"></datalist>
+
+    <details>
+      <summary style="cursor:pointer;color:var(--text-secondary);font-size:12px;margin:10px 0;">
+        + Más datos (opcional, se pueden agregar después)
+      </summary>
+      <div class="field"><label>Master BL</label><input id="f_bl"></div>
+      <div class="field"><label>Booking</label><input id="f_booking"></div>
+      <div class="field"><label>PO</label><input id="f_po"></div>
+      <div class="field"><label>Proveedor</label><input id="f_proveedor"></div>
+      <div class="field"><label>Puerto destino</label>
+        <select id="f_puerto">
+          <option value="">Por definir</option>
+          <option value="San Antonio">San Antonio</option>
+          <option value="Valparaíso">Valparaíso</option>
+        </select>
+      </div>
+      <div class="field"><label>ETA original</label><input type="date" id="f_eta"></div>
+      <div class="field"><label>Estado inicial</label>
+        <select id="f_estado"></select>
+      </div>
+      <div class="field"><label>Notas</label><textarea id="f_notas" rows="2"></textarea></div>
+    </details>
+
+    <div class="modal-actions">
+      <button class="btn secondary" id="btnCancelarNuevo">Cancelar</button>
+      <button class="btn" id="btnGuardarNuevo">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: actualizar estado -->
+<div class="modal-overlay" id="modalEstado">
+  <div class="modal">
+    <h2>Actualizar estado</h2>
+    <p id="estadoContenedorLabel" style="color:var(--text-secondary);font-size:13px;margin-top:-8px;"></p>
+    <div class="field"><label>Nuevo estado</label>
+      <select id="e_estado"></select>
+    </div>
+    <div class="field"><label>ETA actual</label><input type="date" id="e_eta"></div>
+    <div class="field"><label>Notas</label><textarea id="e_notas" rows="2" placeholder="Ej: revisado en sitio de la naviera hoy"></textarea></div>
+    <div class="modal-actions">
+      <button class="btn secondary" id="btnCancelarEstado">Cancelar</button>
+      <button class="btn" id="btnGuardarEstado">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
