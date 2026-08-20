@@ -69,7 +69,7 @@ function checkConfig() {
   if (!API_URL || API_URL === 'PEGAR_AQUI_URL_APPS_SCRIPT') {
     document.getElementById('configBanner').classList.add('show');
     document.getElementById('tablaBody').innerHTML =
-      '<tr><td colspan="13" class="empty-state">Configura API_URL en app.js para cargar datos.</td></tr>';
+      '<tr><td colspan="14" class="empty-state">Configura API_URL en app.js para cargar datos.</td></tr>';
     return false;
   }
   return true;
@@ -152,7 +152,7 @@ function renderTabla() {
   const tbody = document.getElementById('tablaBody');
 
   if (filtrados.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="13" class="empty-state">Sin contenedores para estos filtros.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="14" class="empty-state">Sin contenedores para estos filtros.</td></tr>';
     return;
   }
 
@@ -163,6 +163,7 @@ function renderTabla() {
       <td>${c.Booking || ''}</td>
       <td>${c.Naviera || ''}</td>
       <td>${c.PO || ''}</td>
+      <td>${c.OC_Odoo || ''}</td>
       <td>${c.Proveedor || ''}</td>
       <td>${c.PuertoDestino || ''}</td>
       <td>${c.ETA_Original || ''}</td>
@@ -181,7 +182,7 @@ function renderTabla() {
 
 async function cargarDatos() {
   if (!checkConfig()) return;
-  document.getElementById('tablaBody').innerHTML = '<tr><td colspan="13" class="empty-state">Cargando…</td></tr>';
+  document.getElementById('tablaBody').innerHTML = '<tr><td colspan="14" class="empty-state">Cargando…</td></tr>';
   try {
     const [maestroData, configData] = await Promise.all([
       apiGet('maestro'),
@@ -194,7 +195,7 @@ async function cargarDatos() {
     renderTabla();
   } catch (err) {
     document.getElementById('tablaBody').innerHTML =
-      `<tr><td colspan="13" class="empty-state">Error cargando datos: ${err.message}</td></tr>`;
+      `<tr><td colspan="14" class="empty-state">Error cargando datos: ${err.message}</td></tr>`;
   }
 }
 
@@ -214,6 +215,7 @@ async function guardarNuevo() {
     Booking: document.getElementById('f_booking').value.trim(),
     Naviera: document.getElementById('f_naviera').value.trim(),
     PO: document.getElementById('f_po').value.trim(),
+    OC_Odoo: document.getElementById('f_oc').value.trim(),
     Proveedor: document.getElementById('f_proveedor').value.trim(),
     PuertoDestino: document.getElementById('f_puerto').value,
     ETA_Original: document.getElementById('f_eta').value,
@@ -227,7 +229,7 @@ async function guardarNuevo() {
   }
   await apiPost('addContainer', data);
   cerrarModalNuevo();
-  ['f_contenedor','f_bl','f_booking','f_naviera','f_po','f_proveedor','f_eta','f_notas'].forEach(id => document.getElementById(id).value = '');
+  ['f_contenedor','f_bl','f_booking','f_naviera','f_po','f_oc','f_proveedor','f_eta','f_notas'].forEach(id => document.getElementById(id).value = '');
   await cargarDatos();
 }
 
@@ -244,6 +246,13 @@ function abrirModalEstado(id) {
   document.getElementById('e_estado').value = c.EstadoActual;
   document.getElementById('e_eta').value = c.ETA_Actual || '';
   document.getElementById('e_notas').value = '';
+  document.getElementById('e_bl').value = c.MasterBL || '';
+  document.getElementById('e_booking').value = c.Booking || '';
+  document.getElementById('e_po').value = c.PO || '';
+  document.getElementById('e_oc').value = c.OC_Odoo || '';
+  document.getElementById('e_proveedor').value = c.Proveedor || '';
+  document.getElementById('e_puerto').value = c.PuertoDestino || '';
+  document.getElementById('e_eta_original').value = c.ETA_Original || '';
   document.getElementById('modalEstado').classList.add('open');
 }
 function cerrarModalEstado() {
@@ -251,13 +260,24 @@ function cerrarModalEstado() {
 }
 
 async function guardarEstado() {
-  const data = {
+  const estadoData = {
     ID: idEnEdicion,
     EstadoActual: document.getElementById('e_estado').value,
     ETA_Actual: document.getElementById('e_eta').value,
     Notas: document.getElementById('e_notas').value.trim()
   };
-  await apiPost('updateEstado', data);
+  const datosData = {
+    ID: idEnEdicion,
+    MasterBL: document.getElementById('e_bl').value.trim(),
+    Booking: document.getElementById('e_booking').value.trim(),
+    PO: document.getElementById('e_po').value.trim(),
+    OC_Odoo: document.getElementById('e_oc').value.trim(),
+    Proveedor: document.getElementById('e_proveedor').value.trim(),
+    PuertoDestino: document.getElementById('e_puerto').value,
+    ETA_Original: document.getElementById('e_eta_original').value
+  };
+  await apiPost('updateEstado', estadoData);
+  await apiPost('updateContainer', datosData);
   cerrarModalEstado();
   await cargarDatos();
 }

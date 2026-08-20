@@ -50,6 +50,7 @@
           <th>Booking</th>
           <th>Naviera</th>
           <th>PO</th>
+          <th>OC Odoo</th>
           <th>Proveedor</th>
           <th>Puerto</th>
           <th>ETA original</th>
@@ -61,7 +62,7 @@
         </tr>
       </thead>
       <tbody id="tablaBody">
-        <tr><td colspan="13" class="empty-state">Cargando…</td></tr>
+        <tr><td colspan="14" class="empty-state">Cargando…</td></tr>
       </tbody>
     </table>
   </div>
@@ -87,6 +88,7 @@
       <div class="field"><label>Master BL</label><input id="f_bl"></div>
       <div class="field"><label>Booking</label><input id="f_booking"></div>
       <div class="field"><label>PO</label><input id="f_po"></div>
+      <div class="field"><label>OC Odoo</label><input id="f_oc"></div>
       <div class="field"><label>Proveedor</label><input id="f_proveedor"></div>
       <div class="field"><label>Puerto destino</label>
         <select id="f_puerto">
@@ -112,13 +114,33 @@
 <!-- Modal: actualizar estado -->
 <div class="modal-overlay" id="modalEstado">
   <div class="modal">
-    <h2>Actualizar estado</h2>
+    <h2>Actualizar contenedor</h2>
     <p id="estadoContenedorLabel" style="color:var(--text-secondary);font-size:13px;margin-top:-8px;"></p>
     <div class="field"><label>Nuevo estado</label>
       <select id="e_estado"></select>
     </div>
     <div class="field"><label>ETA actual</label><input type="date" id="e_eta"></div>
-    <div class="field"><label>Notas</label><textarea id="e_notas" rows="2" placeholder="Ej: revisado en sitio de la naviera hoy"></textarea></div>
+    <div class="field"><label>Notas de esta actualización</label><textarea id="e_notas" rows="2" placeholder="Ej: revisado en sitio de la naviera hoy"></textarea></div>
+
+    <details>
+      <summary style="cursor:pointer;color:var(--text-secondary);font-size:12px;margin:10px 0;">
+        + Completar más datos del contenedor
+      </summary>
+      <div class="field"><label>Master BL</label><input id="e_bl"></div>
+      <div class="field"><label>Booking</label><input id="e_booking"></div>
+      <div class="field"><label>PO</label><input id="e_po"></div>
+      <div class="field"><label>OC Odoo</label><input id="e_oc"></div>
+      <div class="field"><label>Proveedor</label><input id="e_proveedor"></div>
+      <div class="field"><label>Puerto destino</label>
+        <select id="e_puerto">
+          <option value="">Por definir</option>
+          <option value="San Antonio">San Antonio</option>
+          <option value="Valparaíso">Valparaíso</option>
+        </select>
+      </div>
+      <div class="field"><label>ETA original</label><input type="date" id="e_eta_original"></div>
+    </details>
+
     <div class="modal-actions">
       <button class="btn secondary" id="btnCancelarEstado">Cancelar</button>
       <button class="btn" id="btnGuardarEstado">Guardar</button>
