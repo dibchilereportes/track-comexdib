@@ -46,12 +46,15 @@
       <thead>
         <tr>
           <th>Contenedor</th>
+          <th>Tipo</th>
           <th>Master BL</th>
           <th>Booking</th>
           <th>Naviera</th>
+          <th>Nave / Viaje</th>
           <th>PO</th>
           <th>OC Odoo</th>
           <th>Proveedor</th>
+          <th>Valor USD</th>
           <th>Puerto</th>
           <th>ETA original</th>
           <th>ETA actual</th>
@@ -62,7 +65,7 @@
         </tr>
       </thead>
       <tbody id="tablaBody">
-        <tr><td colspan="14" class="empty-state">Cargando…</td></tr>
+        <tr><td colspan="17" class="empty-state">Cargando…</td></tr>
       </tbody>
     </table>
   </div>
@@ -85,11 +88,23 @@
       <summary style="cursor:pointer;color:var(--text-secondary);font-size:12px;margin:10px 0;">
         + Más datos (opcional, se pueden agregar después)
       </summary>
+      <div class="field"><label>Tipo de contenedor</label>
+        <select id="f_tipo">
+          <option value="">Por definir</option>
+          <option value="20'">20'</option>
+          <option value="40'">40'</option>
+          <option value="40' HC">40' HC</option>
+          <option value="Otro">Otro</option>
+        </select>
+      </div>
       <div class="field"><label>Master BL</label><input id="f_bl"></div>
       <div class="field"><label>Booking</label><input id="f_booking"></div>
+      <div class="field"><label>Nave</label><input id="f_nave" placeholder="Nombre de la nave"></div>
+      <div class="field"><label>Viaje</label><input id="f_viaje" placeholder="N° de viaje / voyage"></div>
       <div class="field"><label>PO</label><input id="f_po"></div>
       <div class="field"><label>OC Odoo</label><input id="f_oc"></div>
       <div class="field"><label>Proveedor</label><input id="f_proveedor"></div>
+      <div class="field"><label>Valor compra (USD)</label><input type="number" step="0.01" id="f_valor" placeholder="0.00"></div>
       <div class="field"><label>Puerto destino</label>
         <select id="f_puerto">
           <option value="">Por definir</option>
@@ -126,11 +141,23 @@
       <summary style="cursor:pointer;color:var(--text-secondary);font-size:12px;margin:10px 0;">
         + Completar más datos del contenedor
       </summary>
+      <div class="field"><label>Tipo de contenedor</label>
+        <select id="e_tipo">
+          <option value="">Por definir</option>
+          <option value="20'">20'</option>
+          <option value="40'">40'</option>
+          <option value="40' HC">40' HC</option>
+          <option value="Otro">Otro</option>
+        </select>
+      </div>
       <div class="field"><label>Master BL</label><input id="e_bl"></div>
       <div class="field"><label>Booking</label><input id="e_booking"></div>
+      <div class="field"><label>Nave</label><input id="e_nave" placeholder="Nombre de la nave"></div>
+      <div class="field"><label>Viaje</label><input id="e_viaje" placeholder="N° de viaje / voyage"></div>
       <div class="field"><label>PO</label><input id="e_po"></div>
       <div class="field"><label>OC Odoo</label><input id="e_oc"></div>
       <div class="field"><label>Proveedor</label><input id="e_proveedor"></div>
+      <div class="field"><label>Valor compra (USD)</label><input type="number" step="0.01" id="e_valor" placeholder="0.00"></div>
       <div class="field"><label>Puerto destino</label>
         <select id="e_puerto">
           <option value="">Por definir</option>

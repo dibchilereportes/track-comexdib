@@ -173,6 +173,11 @@ main {
   color: #fff;
 }
 
+.btn:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
 .btn.secondary {
   background: transparent;
   color: var(--text-primary);
