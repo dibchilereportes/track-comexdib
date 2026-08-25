@@ -81,7 +81,7 @@ function checkConfig() {
   if (!API_URL || API_URL === 'PEGAR_AQUI_URL_APPS_SCRIPT') {
     document.getElementById('configBanner').classList.add('show');
     document.getElementById('tablaBody').innerHTML =
-      '<tr><td colspan="20" class="empty-state">Configura API_URL en app.js para cargar datos.</td></tr>';
+      '<tr><td colspan="21" class="empty-state">Configura API_URL en app.js para cargar datos.</td></tr>';
     return false;
   }
   return true;
@@ -251,7 +251,7 @@ function renderTabla() {
   renderKpis(filtrados);
 
   if (filtrados.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="20" class="empty-state">Sin contenedores para estos filtros.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="21" class="empty-state">Sin contenedores para estos filtros.</td></tr>';
     sincronizarScrollTop();
     return;
   }
@@ -277,6 +277,7 @@ function renderTabla() {
       <td>${c.Proveedor || ''}</td>
       <td>${c.Empresa || ''}</td>
       <td>${formatoUSD(c.ValorUSD)}</td>
+      <td>${c.DiasLibres !== undefined && c.DiasLibres !== '' && c.DiasLibres !== null ? c.DiasLibres : ''}</td>
       <td>${c.PuertoDestino || ''}</td>
       <td>${c.ETA_Original || ''}</td>
       <td>${c.ETA_Actual || ''}</td>
@@ -297,7 +298,7 @@ function renderTabla() {
 
 async function cargarDatos() {
   if (!checkConfig()) return;
-  document.getElementById('tablaBody').innerHTML = '<tr><td colspan="20" class="empty-state">Cargando…</td></tr>';
+  document.getElementById('tablaBody').innerHTML = '<tr><td colspan="21" class="empty-state">Cargando…</td></tr>';
   try {
     const [maestroData, configData] = await Promise.all([
       apiGet('maestro'),
@@ -309,7 +310,7 @@ async function cargarDatos() {
     renderTabla();
   } catch (err) {
     document.getElementById('tablaBody').innerHTML =
-      `<tr><td colspan="20" class="empty-state">Error cargando datos: ${err.message}</td></tr>`;
+      `<tr><td colspan="21" class="empty-state">Error cargando datos: ${err.message}</td></tr>`;
   }
 }
 
