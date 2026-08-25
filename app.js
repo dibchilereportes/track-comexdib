@@ -42,6 +42,7 @@ const ESTADO_COLOR = {
 
 let maestro = [];
 let configNavieras = [];
+let orden = { campo: 'FechaEsperadaOC', dir: -1 }; // -1 = más nueva primero
 
 async function apiGet(action, params) {
   const url = new URL(API_URL);
@@ -69,7 +70,7 @@ function checkConfig() {
   if (!API_URL || API_URL === 'PEGAR_AQUI_URL_APPS_SCRIPT') {
     document.getElementById('configBanner').classList.add('show');
     document.getElementById('tablaBody').innerHTML =
-      '<tr><td colspan="17" class="empty-state">Configura API_URL en app.js para cargar datos.</td></tr>';
+      '<tr><td colspan="19" class="empty-state">Configura API_URL en app.js para cargar datos.</td></tr>';
     return false;
   }
   return true;
@@ -96,6 +97,13 @@ function badgeEstado(estado) {
 }
 
 function poblarFiltros() {
+  const empresas = [...new Set(maestro.map(c => c.Empresa).filter(Boolean))].sort();
+  const selEmp = document.getElementById('filtroEmpresa');
+  const empresaPrevia = selEmp.value;
+  selEmp.innerHTML = '<option value="">Todas las empresas</option>' +
+    empresas.map(e => `<option value="${e}">${e}</option>`).join('');
+  if (empresas.includes(empresaPrevia)) selEmp.value = empresaPrevia;
+
   const navieras = [...new Set(maestro.map(c => c.Naviera).filter(Boolean))].sort();
   const selNav = document.getElementById('filtroNaviera');
   selNav.innerHTML = '<option value="">Todas las navieras</option>' +
@@ -129,21 +137,61 @@ function renderKpis() {
 }
 
 function aplicarFiltros(data) {
+  const empresa = document.getElementById('filtroEmpresa').value;
   const naviera = document.getElementById('filtroNaviera').value;
   const estado = document.getElementById('filtroEstado').value;
   const retraso = document.getElementById('filtroRetraso').value;
   const texto = document.getElementById('filtroTexto').value.trim().toLowerCase();
 
   return data.filter(c => {
+    if (empresa && c.Empresa !== empresa) return false;
     if (naviera && c.Naviera !== naviera) return false;
     if (estado && c.EstadoActual !== estado) return false;
     if (retraso === 'si' && !(c.Retrasado === true || c.Retrasado === 'TRUE')) return false;
     if (retraso === 'no' && (c.Retrasado === true || c.Retrasado === 'TRUE')) return false;
     if (texto) {
-      const campo = [c.Contenedor, c.MasterBL, c.Booking, c.PO].join(' ').toLowerCase();
+      const campo = [c.Contenedor, c.MasterBL, c.Booking, c.PO, c.OC_Odoo].join(' ').toLowerCase();
       if (!campo.includes(texto)) return false;
     }
     return true;
+  });
+}
+
+// Ordena por el campo/dirección elegidos al hacer clic en un encabezado.
+// Fechas (YYYY-MM-DD) y texto ordenan bien con comparación simple; ValorUSD
+// se compara como número.
+function ordenarDatos(data) {
+  if (!orden.campo) return data;
+  const campo = orden.campo;
+  const copia = [...data];
+  copia.sort((a, b) => {
+    let va = a[campo], vb = b[campo];
+    if (campo === 'ValorUSD') {
+      va = Number(va) || 0;
+      vb = Number(vb) || 0;
+    } else {
+      va = String(va || '');
+      vb = String(vb || '');
+    }
+    // Vacíos siempre al final, sin importar la dirección.
+    if (va === '' && vb === '') return 0;
+    if (va === '') return 1;
+    if (vb === '') return -1;
+    if (va < vb) return -1 * orden.dir;
+    if (va > vb) return 1 * orden.dir;
+    return 0;
+  });
+  return copia;
+}
+
+function actualizarFlechasOrden() {
+  document.querySelectorAll('th.sortable').forEach(th => {
+    const flecha = th.querySelector('.sort-arrow');
+    if (th.dataset.field === orden.campo) {
+      flecha.textContent = orden.dir === 1 ? ' ▲' : ' ▼';
+    } else {
+      flecha.textContent = '';
+    }
   });
 }
 
@@ -159,11 +207,12 @@ function formatoUSD(valor) {
 }
 
 function renderTabla() {
-  const filtrados = aplicarFiltros(maestro);
+  const filtrados = ordenarDatos(aplicarFiltros(maestro));
   const tbody = document.getElementById('tablaBody');
+  actualizarFlechasOrden();
 
   if (filtrados.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="17" class="empty-state">Sin contenedores para estos filtros.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="19" class="empty-state">Sin contenedores para estos filtros.</td></tr>';
     return;
   }
 
@@ -175,6 +224,7 @@ function renderTabla() {
     const naveViaje = [c.Nave, c.Viaje].filter(Boolean).join(' / ');
     return `
     <tr>
+      <td>${c.FechaEsperadaOC || ''}</td>
       <td><strong>${c.Contenedor || ''}</strong></td>
       <td>${c.TipoContenedor || ''}</td>
       <td>${c.MasterBL || ''}</td>
@@ -184,6 +234,7 @@ function renderTabla() {
       <td>${c.PO || ''}</td>
       <td>${c.OC_Odoo || ''}</td>
       <td>${c.Proveedor || ''}</td>
+      <td>${c.Empresa || ''}</td>
       <td>${formatoUSD(c.ValorUSD)}</td>
       <td>${c.PuertoDestino || ''}</td>
       <td>${c.ETA_Original || ''}</td>
@@ -203,7 +254,7 @@ function renderTabla() {
 
 async function cargarDatos() {
   if (!checkConfig()) return;
-  document.getElementById('tablaBody').innerHTML = '<tr><td colspan="17" class="empty-state">Cargando…</td></tr>';
+  document.getElementById('tablaBody').innerHTML = '<tr><td colspan="19" class="empty-state">Cargando…</td></tr>';
   try {
     const [maestroData, configData] = await Promise.all([
       apiGet('maestro'),
@@ -216,7 +267,7 @@ async function cargarDatos() {
     renderTabla();
   } catch (err) {
     document.getElementById('tablaBody').innerHTML =
-      `<tr><td colspan="17" class="empty-state">Error cargando datos: ${err.message}</td></tr>`;
+      `<tr><td colspan="19" class="empty-state">Error cargando datos: ${err.message}</td></tr>`;
   }
 }
 
@@ -358,8 +409,21 @@ function init() {
   document.getElementById('btnGuardarEstado').addEventListener('click', guardarEstado);
 
   document.getElementById('btnRefrescar').addEventListener('click', cargarDatos);
-  ['filtroNaviera','filtroEstado','filtroRetraso','filtroTexto'].forEach(id => {
+  ['filtroEmpresa','filtroNaviera','filtroEstado','filtroRetraso','filtroTexto'].forEach(id => {
     document.getElementById(id).addEventListener('input', renderTabla);
+  });
+
+  document.querySelectorAll('th.sortable').forEach(th => {
+    th.addEventListener('click', () => {
+      const campo = th.dataset.field;
+      if (orden.campo === campo) {
+        orden.dir *= -1;
+      } else {
+        orden.campo = campo;
+        orden.dir = 1;
+      }
+      renderTabla();
+    });
   });
 
   cargarDatos();

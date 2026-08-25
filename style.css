@@ -208,6 +208,20 @@ thead th {
   white-space: nowrap;
 }
 
+thead th.sortable {
+  cursor: pointer;
+  user-select: none;
+}
+
+thead th.sortable:hover {
+  color: var(--text-primary);
+}
+
+.sort-arrow {
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
 tbody td {
   padding: 9px 12px;
   border-bottom: 1px solid var(--gridline);

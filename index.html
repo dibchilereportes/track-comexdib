@@ -29,6 +29,7 @@
   <div class="kpi-row" id="kpiRow"></div>
 
   <div class="filters">
+    <select id="filtroEmpresa"><option value="">Todas las empresas</option></select>
     <select id="filtroNaviera"><option value="">Todas las navieras</option></select>
     <select id="filtroEstado"><option value="">Todos los estados</option></select>
     <select id="filtroRetraso">
@@ -45,27 +46,29 @@
     <table>
       <thead>
         <tr>
-          <th>Contenedor</th>
+          <th class="sortable" data-field="FechaEsperadaOC">Fecha esperada<span class="sort-arrow"></span></th>
+          <th class="sortable" data-field="Contenedor">Contenedor<span class="sort-arrow"></span></th>
           <th>Tipo</th>
           <th>Master BL</th>
           <th>Booking</th>
-          <th>Naviera</th>
+          <th class="sortable" data-field="Naviera">Naviera<span class="sort-arrow"></span></th>
           <th>Nave / Viaje</th>
           <th>PO</th>
-          <th>OC Odoo</th>
+          <th class="sortable" data-field="OC_Odoo">OC Odoo<span class="sort-arrow"></span></th>
           <th>Proveedor</th>
-          <th>Valor USD</th>
-          <th>Puerto</th>
+          <th class="sortable" data-field="Empresa">Empresa<span class="sort-arrow"></span></th>
+          <th class="sortable" data-field="ValorUSD">Valor USD<span class="sort-arrow"></span></th>
+          <th>Puerto (POD)</th>
           <th>ETA original</th>
-          <th>ETA actual</th>
-          <th>Estado</th>
+          <th class="sortable" data-field="ETA_Actual">ETA actual<span class="sort-arrow"></span></th>
+          <th class="sortable" data-field="EstadoActual">Estado<span class="sort-arrow"></span></th>
           <th>Retraso</th>
-          <th>Últ. update</th>
+          <th class="sortable" data-field="FechaUltimoUpdate">Últ. update<span class="sort-arrow"></span></th>
           <th></th>
         </tr>
       </thead>
       <tbody id="tablaBody">
-        <tr><td colspan="17" class="empty-state">Cargando…</td></tr>
+        <tr><td colspan="19" class="empty-state">Cargando…</td></tr>
       </tbody>
     </table>
   </div>
