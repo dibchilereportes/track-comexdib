@@ -30,6 +30,7 @@
 
   <div class="filters">
     <select id="filtroEmpresa"><option value="">Todas las empresas</option></select>
+    <select id="filtroEstadoOC"><option value="">Todos los estados OC</option></select>
     <select id="filtroNaviera"><option value="">Todas las navieras</option></select>
     <select id="filtroEstado"><option value="">Todos los estados</option></select>
     <select id="filtroRetraso">
@@ -56,6 +57,7 @@
           <th>Nave / Viaje</th>
           <th>PO</th>
           <th class="sortable" data-field="OC_Odoo">OC Odoo<span class="sort-arrow"></span></th>
+          <th class="sortable" data-field="EstadoOC">Estado OC<span class="sort-arrow"></span></th>
           <th>Proveedor</th>
           <th class="sortable" data-field="Empresa">Empresa<span class="sort-arrow"></span></th>
           <th class="sortable" data-field="ValorUSD">Valor USD<span class="sort-arrow"></span></th>
@@ -69,7 +71,7 @@
         </tr>
       </thead>
       <tbody id="tablaBody">
-        <tr><td colspan="19" class="empty-state">Cargando…</td></tr>
+        <tr><td colspan="20" class="empty-state">Cargando…</td></tr>
       </tbody>
     </table>
   </div>

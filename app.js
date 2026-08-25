@@ -44,6 +44,17 @@ let maestro = [];
 let configNavieras = [];
 let orden = { campo: 'FechaEsperadaOC', dir: -1 }; // -1 = más nueva primero
 
+// Etiqueta en español para el estado de la OC en Odoo (draft/sent/purchase/
+// done son los valores estándar de Odoo; se muestra el crudo si aparece
+// alguno no mapeado, para no ocultar datos).
+const ESTADO_OC_LABEL = {
+  'draft':       'Solicitud de presupuesto',
+  'sent':        'Solicitud enviada',
+  'to approve':  'Por aprobar',
+  'purchase':    'Orden de compra',
+  'done':        'Bloqueada'
+};
+
 async function apiGet(action, params) {
   const url = new URL(API_URL);
   url.searchParams.set('action', action);
@@ -70,7 +81,7 @@ function checkConfig() {
   if (!API_URL || API_URL === 'PEGAR_AQUI_URL_APPS_SCRIPT') {
     document.getElementById('configBanner').classList.add('show');
     document.getElementById('tablaBody').innerHTML =
-      '<tr><td colspan="19" class="empty-state">Configura API_URL en app.js para cargar datos.</td></tr>';
+      '<tr><td colspan="20" class="empty-state">Configura API_URL en app.js para cargar datos.</td></tr>';
     return false;
   }
   return true;
@@ -104,6 +115,13 @@ function poblarFiltros() {
     empresas.map(e => `<option value="${e}">${e}</option>`).join('');
   if (empresas.includes(empresaPrevia)) selEmp.value = empresaPrevia;
 
+  const estadosOC = [...new Set(maestro.map(c => c.EstadoOC).filter(Boolean))];
+  const selEstadoOC = document.getElementById('filtroEstadoOC');
+  const estadoOCPrevio = selEstadoOC.value;
+  selEstadoOC.innerHTML = '<option value="">Todos los estados OC</option>' +
+    estadosOC.map(e => `<option value="${e}">${ESTADO_OC_LABEL[e] || e}</option>`).join('');
+  if (estadosOC.includes(estadoOCPrevio)) selEstadoOC.value = estadoOCPrevio;
+
   const navieras = [...new Set(maestro.map(c => c.Naviera).filter(Boolean))].sort();
   const selNav = document.getElementById('filtroNaviera');
   selNav.innerHTML = '<option value="">Todas las navieras</option>' +
@@ -117,16 +135,16 @@ function poblarFiltros() {
     configNavieras.map(n => `<option value="${n.Naviera}">`).join('');
 }
 
-function renderKpis() {
+function renderKpis(data) {
   const enTransito = ['Booking', 'Loaded', 'Departed', 'Transshipment'];
-  const activos = maestro.filter(c => c.EstadoActual !== 'Delivered');
+  const activos = data.filter(c => c.EstadoActual !== 'Delivered');
   const kpis = {
     'En tránsito': activos.filter(c => enTransito.includes(c.EstadoActual)).length,
-    'Arribados': maestro.filter(c => c.EstadoActual === 'Arrived').length,
-    'Disponibles retiro': maestro.filter(c => c.EstadoActual === 'Available').length,
-    'Retirados (Gate Out)': maestro.filter(c => c.EstadoActual === 'Gate Out').length,
-    'Recibidos en CD': maestro.filter(c => c.EstadoActual === 'Delivered').length,
-    'Retrasados': maestro.filter(c => c.Retrasado === true || c.Retrasado === 'TRUE').length
+    'Arribados': data.filter(c => c.EstadoActual === 'Arrived').length,
+    'Disponibles retiro': data.filter(c => c.EstadoActual === 'Available').length,
+    'Retirados (Gate Out)': data.filter(c => c.EstadoActual === 'Gate Out').length,
+    'Recibidos en CD': data.filter(c => c.EstadoActual === 'Delivered').length,
+    'Retrasados': data.filter(c => c.Retrasado === true || c.Retrasado === 'TRUE').length
   };
 
   const row = document.getElementById('kpiRow');
@@ -138,6 +156,7 @@ function renderKpis() {
 
 function aplicarFiltros(data) {
   const empresa = document.getElementById('filtroEmpresa').value;
+  const estadoOC = document.getElementById('filtroEstadoOC').value;
   const naviera = document.getElementById('filtroNaviera').value;
   const estado = document.getElementById('filtroEstado').value;
   const retraso = document.getElementById('filtroRetraso').value;
@@ -145,6 +164,7 @@ function aplicarFiltros(data) {
 
   return data.filter(c => {
     if (empresa && c.Empresa !== empresa) return false;
+    if (estadoOC && c.EstadoOC !== estadoOC) return false;
     if (naviera && c.Naviera !== naviera) return false;
     if (estado && c.EstadoActual !== estado) return false;
     if (retraso === 'si' && !(c.Retrasado === true || c.Retrasado === 'TRUE')) return false;
@@ -228,9 +248,10 @@ function renderTabla() {
   const filtrados = ordenarDatos(aplicarFiltros(maestro));
   const tbody = document.getElementById('tablaBody');
   actualizarFlechasOrden();
+  renderKpis(filtrados);
 
   if (filtrados.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="19" class="empty-state">Sin contenedores para estos filtros.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="20" class="empty-state">Sin contenedores para estos filtros.</td></tr>';
     sincronizarScrollTop();
     return;
   }
@@ -252,6 +273,7 @@ function renderTabla() {
       <td>${naveViaje}</td>
       <td>${c.PO || ''}</td>
       <td>${c.OC_Odoo || ''}</td>
+      <td>${ESTADO_OC_LABEL[c.EstadoOC] || c.EstadoOC || ''}</td>
       <td>${c.Proveedor || ''}</td>
       <td>${c.Empresa || ''}</td>
       <td>${formatoUSD(c.ValorUSD)}</td>
@@ -275,7 +297,7 @@ function renderTabla() {
 
 async function cargarDatos() {
   if (!checkConfig()) return;
-  document.getElementById('tablaBody').innerHTML = '<tr><td colspan="19" class="empty-state">Cargando…</td></tr>';
+  document.getElementById('tablaBody').innerHTML = '<tr><td colspan="20" class="empty-state">Cargando…</td></tr>';
   try {
     const [maestroData, configData] = await Promise.all([
       apiGet('maestro'),
@@ -284,11 +306,10 @@ async function cargarDatos() {
     maestro = maestroData;
     configNavieras = configData;
     poblarFiltros();
-    renderKpis();
     renderTabla();
   } catch (err) {
     document.getElementById('tablaBody').innerHTML =
-      `<tr><td colspan="19" class="empty-state">Error cargando datos: ${err.message}</td></tr>`;
+      `<tr><td colspan="20" class="empty-state">Error cargando datos: ${err.message}</td></tr>`;
   }
 }
 
@@ -430,7 +451,7 @@ function init() {
   document.getElementById('btnGuardarEstado').addEventListener('click', guardarEstado);
 
   document.getElementById('btnRefrescar').addEventListener('click', cargarDatos);
-  ['filtroEmpresa','filtroNaviera','filtroEstado','filtroRetraso','filtroTexto'].forEach(id => {
+  ['filtroEmpresa','filtroEstadoOC','filtroNaviera','filtroEstado','filtroRetraso','filtroTexto'].forEach(id => {
     document.getElementById(id).addEventListener('input', renderTabla);
   });
 
