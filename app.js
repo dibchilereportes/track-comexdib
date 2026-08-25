@@ -206,6 +206,24 @@ function formatoUSD(valor) {
   return 'US$ ' + n.toLocaleString('es-CL', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
+// Sincroniza la barra de scroll duplicada de arriba con la tabla real, en
+// ambos sentidos, y ajusta el ancho del div fantasma al ancho real de la
+// tabla (cambia si se agregan/quitan columnas o cambia el contenido).
+function sincronizarScrollTop() {
+  const scrollTop = document.getElementById('scrollTop');
+  const scrollTopInner = document.getElementById('scrollTopInner');
+  const tableCard = document.getElementById('tableCard');
+  const tabla = tableCard.querySelector('table');
+
+  scrollTopInner.style.width = tabla.scrollWidth + 'px';
+
+  if (!scrollTop.dataset.sincronizado) {
+    scrollTop.addEventListener('scroll', () => { tableCard.scrollLeft = scrollTop.scrollLeft; });
+    tableCard.addEventListener('scroll', () => { scrollTop.scrollLeft = tableCard.scrollLeft; });
+    scrollTop.dataset.sincronizado = '1';
+  }
+}
+
 function renderTabla() {
   const filtrados = ordenarDatos(aplicarFiltros(maestro));
   const tbody = document.getElementById('tablaBody');
@@ -213,6 +231,7 @@ function renderTabla() {
 
   if (filtrados.length === 0) {
     tbody.innerHTML = '<tr><td colspan="19" class="empty-state">Sin contenedores para estos filtros.</td></tr>';
+    sincronizarScrollTop();
     return;
   }
 
@@ -250,6 +269,8 @@ function renderTabla() {
   document.querySelectorAll('.btnEditarEstado').forEach(btn => {
     btn.addEventListener('click', () => abrirModalEstado(btn.dataset.id));
   });
+
+  sincronizarScrollTop();
 }
 
 async function cargarDatos() {

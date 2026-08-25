@@ -193,6 +193,20 @@ main {
   overflow-x: auto;
 }
 
+/* Barra de scroll horizontal duplicada arriba de la tabla, sincronizada con
+   la de abajo por JS — evita tener que bajar hasta el final de una tabla
+   larga solo para desplazarse hacia los lados. */
+.scroll-top {
+  overflow-x: auto;
+  overflow-y: hidden;
+  height: 16px;
+  margin-bottom: 4px;
+}
+
+.scroll-top #scrollTopInner {
+  height: 1px;
+}
+
 table {
   width: 100%;
   border-collapse: collapse;
