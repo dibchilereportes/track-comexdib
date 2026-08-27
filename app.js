@@ -138,20 +138,30 @@ function poblarFiltros() {
 function renderKpis(data) {
   const enTransito = ['Booking', 'Loaded', 'Departed', 'Transshipment'];
   const activos = data.filter(c => c.EstadoActual !== 'Delivered');
-  const kpis = {
-    'En tránsito': activos.filter(c => enTransito.includes(c.EstadoActual)).length,
-    'Arribados': data.filter(c => c.EstadoActual === 'Arrived').length,
-    'Disponibles retiro': data.filter(c => c.EstadoActual === 'Available').length,
-    'Retirados (Gate Out)': data.filter(c => c.EstadoActual === 'Gate Out').length,
-    'Recibidos en CD': data.filter(c => c.EstadoActual === 'Delivered').length,
-    'Retrasados': data.filter(c => c.Retrasado === true || c.Retrasado === 'TRUE').length
-  };
+  const kpis = [
+    { label: 'En tránsito', val: activos.filter(c => enTransito.includes(c.EstadoActual)).length, cls: '' },
+    { label: 'Arribados', val: data.filter(c => c.EstadoActual === 'Arrived').length, cls: '' },
+    { label: 'Disponibles retiro', val: data.filter(c => c.EstadoActual === 'Available').length, cls: '' },
+    { label: 'Retirados (Gate Out)', val: data.filter(c => c.EstadoActual === 'Gate Out').length, cls: '' },
+    { label: 'Recibidos en CD', val: data.filter(c => c.EstadoActual === 'Delivered').length, cls: 'ok' },
+    { label: 'Retrasados', val: data.filter(c => c.Retrasado === true || c.Retrasado === 'TRUE').length, cls: null }
+  ];
+  kpis[5].cls = kpis[5].val > 0 ? 'alert' : 'ok';
 
   const row = document.getElementById('kpiRow');
-  row.innerHTML = Object.entries(kpis).map(([label, val]) => {
-    const cls = label === 'Retrasados' ? (val > 0 ? 'alert' : 'ok') : '';
-    return `<div class="stat-tile ${cls}"><div class="label">${label}</div><div class="value">${val}</div></div>`;
-  }).join('');
+  row.innerHTML = kpis.map(k =>
+    `<div class="stat-tile ${k.cls}"><div class="label">${k.label}</div><div class="value">${k.val}</div></div>`
+  ).join('');
+}
+
+function actualizarUltimaSync(data) {
+  const el = document.getElementById('ultimaSync');
+  const dot = document.getElementById('syncDot');
+  if (!data.length) { el.textContent = 'Sin registros'; return; }
+  const fechas = data.map(c => c.FechaUltimoUpdate).filter(Boolean).sort();
+  const ultima = fechas[fechas.length - 1];
+  el.textContent = ultima ? `Última sincronización: ${ultima} · ${data.length} registros` : `${data.length} registros`;
+  if (dot) dot.classList.add('live');
 }
 
 function aplicarFiltros(data) {
@@ -308,6 +318,7 @@ async function cargarDatos() {
     configNavieras = configData;
     poblarFiltros();
     renderTabla();
+    actualizarUltimaSync(maestro);
   } catch (err) {
     document.getElementById('tablaBody').innerHTML =
       `<tr><td colspan="21" class="empty-state">Error cargando datos: ${err.message}</td></tr>`;

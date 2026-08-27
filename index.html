@@ -17,6 +17,10 @@
       <p>San Antonio / Valparaíso — DIB &amp; Decoexpress</p>
     </div>
   </div>
+  <div class="header-meta">
+    <span class="sync-dot" id="syncDot"></span>
+    <span id="ultimaSync">Cargando datos…</span>
+  </div>
 </header>
 
 <main>
@@ -28,19 +32,41 @@
 
   <div class="kpi-row" id="kpiRow"></div>
 
-  <div class="filters">
-    <select id="filtroEmpresa"><option value="">Todas las empresas</option></select>
-    <select id="filtroEstadoOC"><option value="">Todos los estados OC</option></select>
-    <select id="filtroNaviera"><option value="">Todas las navieras</option></select>
-    <select id="filtroEstado"><option value="">Todos los estados</option></select>
-    <select id="filtroRetraso">
-      <option value="">Todos</option>
-      <option value="si">Solo retrasados</option>
-      <option value="no">Solo a tiempo</option>
-    </select>
-    <input type="text" id="filtroTexto" placeholder="Buscar contenedor / BL / booking / PO">
-    <button class="btn" id="btnNuevo">+ Nuevo contenedor</button>
-    <button class="btn secondary" id="btnRefrescar">Actualizar</button>
+  <div class="toolbar">
+    <div class="filters">
+      <div class="field-inline">
+        <label for="filtroEmpresa">Empresa</label>
+        <select id="filtroEmpresa"><option value="">Todas</option></select>
+      </div>
+      <div class="field-inline">
+        <label for="filtroEstadoOC">Estado OC</label>
+        <select id="filtroEstadoOC"><option value="">Todos</option></select>
+      </div>
+      <div class="field-inline">
+        <label for="filtroNaviera">Naviera</label>
+        <select id="filtroNaviera"><option value="">Todas</option></select>
+      </div>
+      <div class="field-inline">
+        <label for="filtroEstado">Estado tracking</label>
+        <select id="filtroEstado"><option value="">Todos</option></select>
+      </div>
+      <div class="field-inline">
+        <label for="filtroRetraso">Retraso</label>
+        <select id="filtroRetraso">
+          <option value="">Todos</option>
+          <option value="si">Solo retrasados</option>
+          <option value="no">Solo a tiempo</option>
+        </select>
+      </div>
+      <div class="field-inline search">
+        <label for="filtroTexto">Buscar</label>
+        <input type="text" id="filtroTexto" placeholder="Contenedor / BL / booking / PO / OC">
+      </div>
+    </div>
+    <div class="toolbar-actions">
+      <button class="btn secondary" id="btnRefrescar">Actualizar</button>
+      <button class="btn" id="btnNuevo">+ Nuevo contenedor</button>
+    </div>
   </div>
 
   <div class="scroll-top" id="scrollTop"><div id="scrollTopInner"></div></div>
