@@ -42,6 +42,7 @@ const ESTADO_COLOR = {
 
 let maestro = [];
 let configNavieras = [];
+let detalleProductos = [];
 let orden = { campo: 'FechaEsperadaOC', dir: -1 }; // -1 = más nueva primero
 let estadosOCSeleccionados = new Set(); // vacío = "todos"
 
@@ -270,24 +271,6 @@ function formatoUSD(valor) {
   return 'US$ ' + n.toLocaleString('es-CL', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-// Sincroniza la barra de scroll duplicada de arriba con la tabla real, en
-// ambos sentidos, y ajusta el ancho del div fantasma al ancho real de la
-// tabla (cambia si se agregan/quitan columnas o cambia el contenido).
-function sincronizarScrollTop() {
-  const scrollTop = document.getElementById('scrollTop');
-  const scrollTopInner = document.getElementById('scrollTopInner');
-  const tableCard = document.getElementById('tableCard');
-  const tabla = tableCard.querySelector('table');
-
-  scrollTopInner.style.width = tabla.scrollWidth + 'px';
-
-  if (!scrollTop.dataset.sincronizado) {
-    scrollTop.addEventListener('scroll', () => { tableCard.scrollLeft = scrollTop.scrollLeft; });
-    tableCard.addEventListener('scroll', () => { scrollTop.scrollLeft = tableCard.scrollLeft; });
-    scrollTop.dataset.sincronizado = '1';
-  }
-}
-
 function renderTabla() {
   const filtrados = ordenarDatos(aplicarFiltros(maestro));
   const tbody = document.getElementById('tablaBody');
@@ -296,7 +279,6 @@ function renderTabla() {
 
   if (filtrados.length === 0) {
     tbody.innerHTML = '<tr><td colspan="21" class="empty-state">Sin contenedores para estos filtros.</td></tr>';
-    sincronizarScrollTop();
     return;
   }
 
@@ -328,7 +310,7 @@ function renderTabla() {
       <td>${badgeEstado(c.EstadoActual)}${(c.PendienteRevision === true || c.PendienteRevision === 'TRUE') ? '<div class="pill-pendiente">pendiente revisión</div>' : ''}</td>
       <td>${badgeRetraso(c)}</td>
       <td>${c.FechaUltimoUpdate || ''}</td>
-      <td class="row-actions">${linkTracking}<button data-id="${c.ID}" class="btnEditarEstado">Actualizar</button></td>
+      <td class="row-actions">${linkTracking}<button data-id="${c.ID}" class="btnEditarEstado">Actualizar</button>${c.OC_Odoo ? `<button data-oc="${c.OC_Odoo}" class="btnVerDetalle">Detalle</button>` : ''}</td>
     </tr>
   `;
   }).join('');
@@ -336,20 +318,55 @@ function renderTabla() {
   document.querySelectorAll('.btnEditarEstado').forEach(btn => {
     btn.addEventListener('click', () => abrirModalEstado(btn.dataset.id));
   });
+  document.querySelectorAll('.btnVerDetalle').forEach(btn => {
+    btn.addEventListener('click', () => abrirModalDetalle(btn.dataset.oc));
+  });
+}
 
-  sincronizarScrollTop();
+// ---------- Modal detalle de productos ----------
+
+function abrirModalDetalle(ocOdoo) {
+  const lineas = detalleProductos.filter(d => d.OC_Odoo === ocOdoo);
+  document.getElementById('detalleOCLabel').textContent = `OC ${ocOdoo}`;
+  const tbody = document.getElementById('detalleTablaBody');
+  if (!lineas.length) {
+    tbody.innerHTML = '<tr><td colspan="5" class="empty-state">Sin líneas de producto para esta OC.</td></tr>';
+  } else {
+    let totalUSD = 0;
+    tbody.innerHTML = lineas.map(l => {
+      totalUSD += Number(l.SubtotalUSD) || 0;
+      return `
+      <tr>
+        <td>${l.Producto || ''}</td>
+        <td>${l.SKU || ''}</td>
+        <td>${l.Cantidad || ''}</td>
+        <td>${formatoUSD(l.PrecioUnitarioUSD)}</td>
+        <td>${formatoUSD(l.SubtotalUSD)}</td>
+      </tr>`;
+    }).join('') + `
+      <tr class="detalle-total">
+        <td colspan="4">Total</td>
+        <td>${formatoUSD(totalUSD)}</td>
+      </tr>`;
+  }
+  document.getElementById('modalDetalle').classList.add('open');
+}
+function cerrarModalDetalle() {
+  document.getElementById('modalDetalle').classList.remove('open');
 }
 
 async function cargarDatos() {
   if (!checkConfig()) return;
   document.getElementById('tablaBody').innerHTML = '<tr><td colspan="21" class="empty-state">Cargando…</td></tr>';
   try {
-    const [maestroData, configData] = await Promise.all([
+    const [maestroData, configData, detalleData] = await Promise.all([
       apiGet('maestro'),
-      apiGet('config')
+      apiGet('config'),
+      apiGet('detalle')
     ]);
     maestro = maestroData;
     configNavieras = configData;
+    detalleProductos = detalleData;
     poblarFiltros();
     renderTabla();
     actualizarUltimaSync(maestro);
@@ -495,6 +512,8 @@ function init() {
 
   document.getElementById('btnCancelarEstado').addEventListener('click', cerrarModalEstado);
   document.getElementById('btnGuardarEstado').addEventListener('click', guardarEstado);
+
+  document.getElementById('btnCerrarDetalle').addEventListener('click', cerrarModalDetalle);
 
   document.getElementById('btnRefrescar').addEventListener('click', cargarDatos);
   ['filtroEmpresa','filtroNaviera','filtroEstado','filtroRetraso','filtroTexto'].forEach(id => {

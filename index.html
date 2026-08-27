@@ -72,7 +72,6 @@
     </div>
   </div>
 
-  <div class="scroll-top" id="scrollTop"><div id="scrollTopInner"></div></div>
   <div class="table-card" id="tableCard">
     <table>
       <thead>
@@ -207,6 +206,31 @@
     <div class="modal-actions">
       <button class="btn secondary" id="btnCancelarEstado">Cancelar</button>
       <button class="btn" id="btnGuardarEstado">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: detalle de productos de una OC -->
+<div class="modal-overlay" id="modalDetalle">
+  <div class="modal modal-wide">
+    <h2>Detalle de productos</h2>
+    <p id="detalleOCLabel" style="color:var(--text-secondary);font-size:13px;margin-top:-8px;"></p>
+    <div class="table-card" style="max-height:320px;margin:14px 0;">
+      <table>
+        <thead>
+          <tr>
+            <th>Producto</th>
+            <th>SKU</th>
+            <th>Cantidad</th>
+            <th>Precio unit. USD</th>
+            <th>Subtotal USD</th>
+          </tr>
+        </thead>
+        <tbody id="detalleTablaBody"></tbody>
+      </table>
+    </div>
+    <div class="modal-actions">
+      <button class="btn secondary" id="btnCerrarDetalle">Cerrar</button>
     </div>
   </div>
 </div>
