@@ -104,10 +104,10 @@ body {
      tarjetas/tabla siguen sobre --surface-1 sólido para no perder
      contraste de lectura. */
   background:
-    radial-gradient(1300px 750px at 8% -12%, color-mix(in srgb, var(--brand-2) 45%, transparent), transparent 62%),
-    radial-gradient(1150px 680px at 100% 0%, color-mix(in srgb, var(--brand-1) 42%, transparent), transparent 58%),
-    radial-gradient(1000px 600px at 50% 118%, color-mix(in srgb, var(--brand-2) 32%, transparent), transparent 62%),
-    var(--page-plane);
+    radial-gradient(1500px 950px at -8% -18%, rgba(0,131,184,0.65), transparent 55%),
+    radial-gradient(1300px 850px at 108% -8%, rgba(17,48,87,0.60), transparent 52%),
+    radial-gradient(1100px 750px at 50% 122%, rgba(0,131,184,0.42), transparent 55%),
+    linear-gradient(160deg, #e3f2fa 0%, #eef6f4 45%, #f9f9f7 100%);
   background-attachment: fixed;
   color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
@@ -127,10 +127,11 @@ header.app-header {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 16px 28px;
-  border-bottom: 1px solid var(--border);
-  background: var(--surface-1);
-  box-shadow: 0 2px 12px -6px rgba(0,0,0,0.15);
+  padding: 14px 28px;
+  background:
+    radial-gradient(600px 200px at 15% 0%, rgba(255,255,255,0.10), transparent 60%),
+    linear-gradient(100deg, var(--brand-1) 0%, var(--brand-1) 55%, var(--brand-2) 100%);
+  box-shadow: 0 4px 20px -6px rgba(17,48,87,0.45);
   flex-shrink: 0;
 }
 
@@ -139,13 +140,9 @@ header.app-header::after {
   position: absolute;
   left: 0;
   right: 0;
-  bottom: -1px;
+  bottom: -3px;
   height: 3px;
-  /* navy -> celeste con un pequeño quiebre rojo, como el tile del logo */
-  background: linear-gradient(90deg,
-    var(--brand-1) 0%, var(--brand-1) 45%,
-    var(--brand-pop) 45%, var(--brand-pop) 49%,
-    var(--brand-2) 49%, var(--brand-2) 100%);
+  background: var(--brand-pop);
 }
 
 .header-brand {
@@ -155,21 +152,26 @@ header.app-header::after {
 }
 
 .brand-logo {
-  height: 38px;
+  height: 40px;
   width: auto;
   object-fit: contain;
+  padding: 4px 8px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 14px -4px rgba(0,0,0,0.35);
 }
 
 header.app-header h1 {
-  font-size: 17px;
-  font-weight: 700;
+  font-size: 18px;
+  font-weight: 800;
   margin: 0 0 2px 0;
   letter-spacing: 0.2px;
+  color: #fff;
 }
 
 header.app-header p {
   margin: 0;
-  color: var(--text-secondary);
+  color: rgba(255,255,255,0.72);
   font-size: 12.5px;
 }
 
@@ -178,8 +180,11 @@ header.app-header p {
   align-items: center;
   gap: 8px;
   font-size: 12.5px;
-  color: var(--text-secondary);
+  color: rgba(255,255,255,0.85);
   white-space: nowrap;
+  background: rgba(255,255,255,0.12);
+  padding: 5px 12px;
+  border-radius: 100px;
 }
 
 .sync-dot {
