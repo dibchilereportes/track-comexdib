@@ -38,12 +38,17 @@
   --status-critical: #d03b3b;
   --success-text: #006300;
 
-  /* acento de marca (botones, header, focos) — separado de --series-*
-     para no tocar la paleta de charts/badges ya validada con dataviz */
-  --brand-1: #2a63f0;
-  --brand-2: #7c3aed;
+  /* acento de marca — colores extraídos del logo DIB (navy + celeste +
+     rojo), separado de --series-* para no tocar la paleta de charts/badges
+     ya validada con dataviz */
+  --brand-1: #113057;
+  --brand-2: #0083b8;
+  --brand-pop: #d03d31;
+  --brand-pop-dark: #a92e24;
   --brand-grad: linear-gradient(135deg, var(--brand-1), var(--brand-2));
-  --brand-shadow: 0 6px 16px -6px rgba(66, 60, 220, 0.45);
+  --brand-pop-grad: linear-gradient(135deg, var(--brand-pop), var(--brand-pop-dark));
+  --brand-shadow: 0 6px 16px -6px rgba(17, 48, 87, 0.45);
+  --brand-pop-shadow: 0 6px 16px -6px rgba(208, 61, 49, 0.5);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -75,10 +80,14 @@
     --status-critical: #d03b3b;
     --success-text: #0ca30c;
 
-    --brand-1: #4f7fff;
-    --brand-2: #9d6bff;
+    --brand-1: #2f5b99;
+    --brand-2: #16a4e0;
+    --brand-pop: #ff5c47;
+    --brand-pop-dark: #d0392a;
     --brand-grad: linear-gradient(135deg, var(--brand-1), var(--brand-2));
-    --brand-shadow: 0 6px 18px -6px rgba(124, 100, 255, 0.55);
+    --brand-pop-grad: linear-gradient(135deg, var(--brand-pop), var(--brand-pop-dark));
+    --brand-shadow: 0 6px 18px -6px rgba(22, 164, 224, 0.5);
+    --brand-pop-shadow: 0 6px 18px -6px rgba(255, 92, 71, 0.5);
   }
 }
 
@@ -124,7 +133,11 @@ header.app-header::after {
   right: 0;
   bottom: -1px;
   height: 3px;
-  background: var(--brand-grad);
+  /* navy -> celeste con un pequeño quiebre rojo, como el tile del logo */
+  background: linear-gradient(90deg,
+    var(--brand-1) 0%, var(--brand-1) 45%,
+    var(--brand-pop) 45%, var(--brand-pop) 49%,
+    var(--brand-2) 49%, var(--brand-2) 100%);
 }
 
 .header-brand {
@@ -240,6 +253,8 @@ main {
 .stat-tile.warn .value { color: #a06400; }
 .stat-tile.ok { border-top-color: var(--status-good); }
 .stat-tile.ok .value { color: var(--success-text); }
+.stat-tile.brand { border-top-color: var(--brand-2); }
+.stat-tile.brand .value { color: var(--brand-1); }
 
 /* ---------- Toolbar / filtros ---------- */
 
@@ -440,7 +455,20 @@ main {
 .btn.secondary:hover {
   background: color-mix(in srgb, var(--brand-1) 10%, var(--surface-1));
   filter: none;
-  box-shadow: 0 4px 12px -6px rgba(66, 60, 220, 0.35);
+  box-shadow: 0 4px 12px -6px rgba(17, 48, 87, 0.35);
+}
+
+/* CTA principal (+ Nuevo contenedor): usa el rojo del logo para que
+   destaque como la acción de crear, distinta de guardar/actualizar. */
+.btn.accent {
+  background: var(--brand-pop-grad);
+  box-shadow: var(--brand-pop-shadow);
+}
+
+.btn.accent:hover {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+  box-shadow: 0 10px 22px -6px rgba(208, 61, 49, 0.55);
 }
 
 /* ---------- Tabla ---------- */

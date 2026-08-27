@@ -186,10 +186,10 @@ function renderKpis(data) {
   const enTransito = ['Booking', 'Loaded', 'Departed', 'Transshipment'];
   const activos = data.filter(c => c.EstadoActual !== 'Delivered');
   const kpis = [
-    { label: 'En tránsito', val: activos.filter(c => enTransito.includes(c.EstadoActual)).length, cls: '' },
-    { label: 'Arribados', val: data.filter(c => c.EstadoActual === 'Arrived').length, cls: '' },
-    { label: 'Disponibles retiro', val: data.filter(c => c.EstadoActual === 'Available').length, cls: '' },
-    { label: 'Retirados (Gate Out)', val: data.filter(c => c.EstadoActual === 'Gate Out').length, cls: '' },
+    { label: 'En tránsito', val: activos.filter(c => enTransito.includes(c.EstadoActual)).length, cls: 'brand' },
+    { label: 'Arribados', val: data.filter(c => c.EstadoActual === 'Arrived').length, cls: 'brand' },
+    { label: 'Disponibles retiro', val: data.filter(c => c.EstadoActual === 'Available').length, cls: 'brand' },
+    { label: 'Retirados (Gate Out)', val: data.filter(c => c.EstadoActual === 'Gate Out').length, cls: 'brand' },
     { label: 'Recibidos en CD', val: data.filter(c => c.EstadoActual === 'Delivered').length, cls: 'ok' },
     { label: 'Retrasados', val: data.filter(c => c.Retrasado === true || c.Retrasado === 'TRUE').length, cls: null }
   ];
