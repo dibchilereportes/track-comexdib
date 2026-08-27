@@ -45,6 +45,7 @@ let configNavieras = [];
 let detalleProductos = [];
 let orden = { campo: 'FechaEsperadaOC', dir: -1 }; // -1 = más nueva primero
 let estadosOCSeleccionados = new Set(); // vacío = "todos"
+let mostrarCerrados = false; // OC en estado 'done' (Cerrado): ya recibidas, fuera del control por defecto
 
 // Etiqueta en español para el estado de la OC en Odoo (draft/sent/purchase/
 // done son los valores estándar de Odoo; se muestra el crudo si aparece
@@ -54,7 +55,7 @@ const ESTADO_OC_LABEL = {
   'sent':        'Solicitud enviada',
   'to approve':  'Por aprobar',
   'purchase':    'Orden de compra',
-  'done':        'Bloqueada'
+  'done':        'Cerrado'
 };
 
 async function apiGet(action, params) {
@@ -117,7 +118,11 @@ function poblarFiltros() {
     empresas.map(e => `<option value="${e}">${e}</option>`).join('');
   if (empresas.includes(empresaPrevia)) selEmp.value = empresaPrevia;
 
-  const estadosOC = [...new Set(maestro.map(c => c.EstadoOC).filter(Boolean))];
+  // "Cerrado" (OC en estado 'done', ya recibidas) no aparece como opción de
+  // filtro salvo que "Mostrar cerrados" esté activo — no forman parte del
+  // control activo, solo se pueden consultar prendiendo el toggle.
+  const baseFiltro = mostrarCerrados ? maestro : maestro.filter(c => c.EstadoOC !== 'done');
+  const estadosOC = [...new Set(baseFiltro.map(c => c.EstadoOC).filter(Boolean))];
   // Limpia selecciones que ya no existan en los datos actuales.
   [...estadosOCSeleccionados].forEach(v => { if (!estadosOC.includes(v)) estadosOCSeleccionados.delete(v); });
   const panel = document.getElementById('filtroEstadoOCPanel');
@@ -272,7 +277,8 @@ function formatoUSD(valor) {
 }
 
 function renderTabla() {
-  const filtrados = ordenarDatos(aplicarFiltros(maestro));
+  const base = mostrarCerrados ? maestro : maestro.filter(c => c.EstadoOC !== 'done');
+  const filtrados = ordenarDatos(aplicarFiltros(base));
   const tbody = document.getElementById('tablaBody');
   actualizarFlechasOrden();
   renderKpis(filtrados);
@@ -520,6 +526,11 @@ function init() {
   document.getElementById('btnRefrescar').addEventListener('click', cargarDatos);
   ['filtroEmpresa','filtroNaviera','filtroEstado','filtroRetraso','filtroTexto'].forEach(id => {
     document.getElementById(id).addEventListener('input', renderTabla);
+  });
+  document.getElementById('filtroMostrarCerrados').addEventListener('change', (e) => {
+    mostrarCerrados = e.target.checked;
+    poblarFiltros();
+    renderTabla();
   });
   initMultiselectEstadoOC();
 
