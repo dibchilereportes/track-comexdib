@@ -100,7 +100,15 @@ html, body {
 body {
   margin: 0;
   font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
-  background: var(--page-plane);
+  /* Difuminado azulado (colores del logo) detrás del contenido — las
+     tarjetas/tabla siguen sobre --surface-1 sólido para no perder
+     contraste de lectura. */
+  background:
+    radial-gradient(1100px 620px at 8% -12%, color-mix(in srgb, var(--brand-2) 16%, transparent), transparent 60%),
+    radial-gradient(1000px 560px at 100% 0%, color-mix(in srgb, var(--brand-1) 14%, transparent), transparent 55%),
+    radial-gradient(900px 500px at 50% 115%, color-mix(in srgb, var(--brand-2) 10%, transparent), transparent 60%),
+    var(--page-plane);
+  background-attachment: fixed;
   color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
   /* La página completa no scrollea: header, KPIs y filtros ocupan su alto
