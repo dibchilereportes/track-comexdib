@@ -309,7 +309,7 @@ function renderTabla() {
       <td>${c.PuertoDestino || ''}</td>
       <td>${c.ETA_Original || ''}</td>
       <td>${c.ETA_Actual || ''}</td>
-      <td>${badgeEstado(c.EstadoActual)}${(c.PendienteRevision === true || c.PendienteRevision === 'TRUE') ? '<div class="pill-pendiente">pendiente revisión</div>' : ''}</td>
+      <td>${badgeEstado(c.EstadoActual)}${(c.PendienteRevision === true || c.PendienteRevision === 'TRUE') ? '<span class="pill-pendiente">pendiente revisión</span>' : ''}</td>
       <td>${badgeRetraso(c)}</td>
       <td>${c.FechaUltimoUpdate || ''}</td>
       <td class="row-actions">${linkTracking}<button data-id="${c.ID}" class="btnEditarEstado">Actualizar</button>${c.OC_Odoo ? `<button data-oc="${c.OC_Odoo}" class="btnVerDetalle">Detalle</button>` : ''}</td>
