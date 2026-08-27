@@ -39,8 +39,11 @@
         <select id="filtroEmpresa"><option value="">Todas</option></select>
       </div>
       <div class="field-inline">
-        <label for="filtroEstadoOC">Estado OC</label>
-        <select id="filtroEstadoOC"><option value="">Todos</option></select>
+        <label>Estado OC</label>
+        <div class="multiselect" id="filtroEstadoOCWrap">
+          <button type="button" class="multiselect-btn" id="filtroEstadoOCBtn">Todos</button>
+          <div class="multiselect-panel" id="filtroEstadoOCPanel"></div>
+        </div>
       </div>
       <div class="field-inline">
         <label for="filtroNaviera">Naviera</label>

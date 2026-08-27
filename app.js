@@ -43,6 +43,7 @@ const ESTADO_COLOR = {
 let maestro = [];
 let configNavieras = [];
 let orden = { campo: 'FechaEsperadaOC', dir: -1 }; // -1 = más nueva primero
+let estadosOCSeleccionados = new Set(); // vacío = "todos"
 
 // Etiqueta en español para el estado de la OC en Odoo (draft/sent/purchase/
 // done son los valores estándar de Odoo; se muestra el crudo si aparece
@@ -116,11 +117,24 @@ function poblarFiltros() {
   if (empresas.includes(empresaPrevia)) selEmp.value = empresaPrevia;
 
   const estadosOC = [...new Set(maestro.map(c => c.EstadoOC).filter(Boolean))];
-  const selEstadoOC = document.getElementById('filtroEstadoOC');
-  const estadoOCPrevio = selEstadoOC.value;
-  selEstadoOC.innerHTML = '<option value="">Todos los estados OC</option>' +
-    estadosOC.map(e => `<option value="${e}">${ESTADO_OC_LABEL[e] || e}</option>`).join('');
-  if (estadosOC.includes(estadoOCPrevio)) selEstadoOC.value = estadoOCPrevio;
+  // Limpia selecciones que ya no existan en los datos actuales.
+  [...estadosOCSeleccionados].forEach(v => { if (!estadosOC.includes(v)) estadosOCSeleccionados.delete(v); });
+  const panel = document.getElementById('filtroEstadoOCPanel');
+  panel.innerHTML = estadosOC.map(e => `
+    <label class="multiselect-option">
+      <input type="checkbox" value="${e}" ${estadosOCSeleccionados.has(e) ? 'checked' : ''}>
+      ${ESTADO_OC_LABEL[e] || e}
+    </label>
+  `).join('') || '<div class="multiselect-empty">Sin datos aún</div>';
+  panel.querySelectorAll('input[type="checkbox"]').forEach(chk => {
+    chk.addEventListener('change', () => {
+      if (chk.checked) estadosOCSeleccionados.add(chk.value);
+      else estadosOCSeleccionados.delete(chk.value);
+      actualizarBotonEstadoOC();
+      renderTabla();
+    });
+  });
+  actualizarBotonEstadoOC();
 
   const navieras = [...new Set(maestro.map(c => c.Naviera).filter(Boolean))].sort();
   const selNav = document.getElementById('filtroNaviera');
@@ -133,6 +147,27 @@ function poblarFiltros() {
 
   document.getElementById('listaNavieras').innerHTML =
     configNavieras.map(n => `<option value="${n.Naviera}">`).join('');
+}
+
+function actualizarBotonEstadoOC() {
+  const btn = document.getElementById('filtroEstadoOCBtn');
+  const n = estadosOCSeleccionados.size;
+  if (n === 0) btn.textContent = 'Todos';
+  else if (n === 1) btn.textContent = ESTADO_OC_LABEL[[...estadosOCSeleccionados][0]] || [...estadosOCSeleccionados][0];
+  else btn.textContent = `${n} seleccionados`;
+  btn.classList.toggle('active', n > 0);
+}
+
+function initMultiselectEstadoOC() {
+  const wrap = document.getElementById('filtroEstadoOCWrap');
+  const btn = document.getElementById('filtroEstadoOCBtn');
+  btn.addEventListener('click', (ev) => {
+    ev.stopPropagation();
+    wrap.classList.toggle('open');
+  });
+  document.addEventListener('click', (ev) => {
+    if (!wrap.contains(ev.target)) wrap.classList.remove('open');
+  });
 }
 
 function renderKpis(data) {
@@ -166,7 +201,6 @@ function actualizarUltimaSync(data) {
 
 function aplicarFiltros(data) {
   const empresa = document.getElementById('filtroEmpresa').value;
-  const estadoOC = document.getElementById('filtroEstadoOC').value;
   const naviera = document.getElementById('filtroNaviera').value;
   const estado = document.getElementById('filtroEstado').value;
   const retraso = document.getElementById('filtroRetraso').value;
@@ -174,7 +208,7 @@ function aplicarFiltros(data) {
 
   return data.filter(c => {
     if (empresa && c.Empresa !== empresa) return false;
-    if (estadoOC && c.EstadoOC !== estadoOC) return false;
+    if (estadosOCSeleccionados.size > 0 && !estadosOCSeleccionados.has(c.EstadoOC)) return false;
     if (naviera && c.Naviera !== naviera) return false;
     if (estado && c.EstadoActual !== estado) return false;
     if (retraso === 'si' && !(c.Retrasado === true || c.Retrasado === 'TRUE')) return false;
@@ -463,9 +497,10 @@ function init() {
   document.getElementById('btnGuardarEstado').addEventListener('click', guardarEstado);
 
   document.getElementById('btnRefrescar').addEventListener('click', cargarDatos);
-  ['filtroEmpresa','filtroEstadoOC','filtroNaviera','filtroEstado','filtroRetraso','filtroTexto'].forEach(id => {
+  ['filtroEmpresa','filtroNaviera','filtroEstado','filtroRetraso','filtroTexto'].forEach(id => {
     document.getElementById(id).addEventListener('input', renderTabla);
   });
+  initMultiselectEstadoOC();
 
   document.querySelectorAll('th.sortable').forEach(th => {
     th.addEventListener('click', () => {
