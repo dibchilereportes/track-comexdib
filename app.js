@@ -17,14 +17,14 @@ const ESTADOS = [
 // fuentes y el que va a usar el agente IA de tracking más adelante.
 const ESTADO_LABEL = {
   'Booking':        'Reservado (Booking)',
-  'Loaded':         'Cargado a bordo',
-  'Departed':       'Zarpó',
-  'Transshipment':  'Transbordo',
-  'Arrived':        'Arribó a puerto',
-  'Discharged':     'Descargado',
-  'Available':      'Disponible para retiro',
+  'Loaded':         'Cargado en origen',
+  'Departed':       'En tránsito',
+  'Transshipment':  'En transbordo',
+  'Arrived':        'Arribado a POD',
+  'Discharged':     'Descargado en POD',
+  'Available':      'Liberado (disponible retiro)',
   'Gate Out':       'Retirado del puerto',
-  'Delivered':      'Entregado en CD'
+  'Delivered':      'Entregado en destino'
 };
 
 // Rampa secuencial (avance del pipeline) - un solo hue, claro -> oscuro.
