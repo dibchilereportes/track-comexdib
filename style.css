@@ -37,6 +37,13 @@
   --status-serious: #ec835a;
   --status-critical: #d03b3b;
   --success-text: #006300;
+
+  /* acento de marca (botones, header, focos) — separado de --series-*
+     para no tocar la paleta de charts/badges ya validada con dataviz */
+  --brand-1: #2a63f0;
+  --brand-2: #7c3aed;
+  --brand-grad: linear-gradient(135deg, var(--brand-1), var(--brand-2));
+  --brand-shadow: 0 6px 16px -6px rgba(66, 60, 220, 0.45);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -67,6 +74,11 @@
     --status-serious: #ec835a;
     --status-critical: #d03b3b;
     --success-text: #0ca30c;
+
+    --brand-1: #4f7fff;
+    --brand-2: #9d6bff;
+    --brand-grad: linear-gradient(135deg, var(--brand-1), var(--brand-2));
+    --brand-shadow: 0 6px 18px -6px rgba(124, 100, 255, 0.55);
   }
 }
 
@@ -93,6 +105,7 @@ body {
 /* ---------- Header ---------- */
 
 header.app-header {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -100,7 +113,18 @@ header.app-header {
   padding: 16px 28px;
   border-bottom: 1px solid var(--border);
   background: var(--surface-1);
+  box-shadow: 0 2px 12px -6px rgba(0,0,0,0.15);
   flex-shrink: 0;
+}
+
+header.app-header::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 3px;
+  background: var(--brand-grad);
 }
 
 .header-brand {
@@ -147,7 +171,13 @@ header.app-header p {
 
 .sync-dot.live {
   background: var(--status-good);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--status-good) 20%, transparent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--status-good) 25%, transparent);
+  animation: pulse-dot 2.2s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { box-shadow: 0 0 0 4px color-mix(in srgb, var(--status-good) 25%, transparent); }
+  50% { box-shadow: 0 0 0 7px color-mix(in srgb, var(--status-good) 12%, transparent); }
 }
 
 main {
@@ -177,14 +207,15 @@ main {
   background: var(--surface-1);
   border: 1px solid var(--border);
   border-top: 3px solid var(--baseline);
-  border-radius: 10px;
+  border-radius: 12px;
   padding: 14px 16px;
   box-shadow: var(--shadow-card);
-  transition: transform 0.12s ease, box-shadow 0.12s ease;
+  transition: transform 0.14s ease, box-shadow 0.14s ease;
 }
 
 .stat-tile:hover {
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px -2px rgba(11,11,11,0.06), 0 16px 28px -14px rgba(11,11,11,0.22);
 }
 
 .stat-tile .label {
@@ -215,7 +246,7 @@ main {
 .toolbar {
   background: var(--surface-1);
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: 12px;
   box-shadow: var(--shadow-card);
   padding: 14px 16px;
   margin-bottom: 16px;
@@ -267,8 +298,8 @@ main {
 
 .filters select:focus, .filters input[type="text"]:focus {
   outline: none;
-  border-color: var(--series-1);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--series-1) 18%, transparent);
+  border-color: var(--brand-1);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-1) 18%, transparent);
 }
 
 .multiselect {
@@ -297,9 +328,10 @@ main {
 }
 
 .multiselect-btn.active {
-  border-color: var(--series-1);
-  color: var(--series-1);
-  font-weight: 600;
+  border-color: var(--brand-1);
+  background: color-mix(in srgb, var(--brand-1) 10%, var(--page-plane));
+  color: var(--brand-1);
+  font-weight: 700;
 }
 
 .multiselect-panel {
@@ -354,39 +386,56 @@ main {
 
 .btn {
   border: none;
-  border-radius: 6px;
-  padding: 8px 16px;
+  border-radius: 8px;
+  padding: 9px 18px;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 700;
+  letter-spacing: 0.1px;
   cursor: pointer;
-  background: var(--series-1);
+  background: var(--brand-grad);
   color: #fff;
-  transition: filter 0.12s ease;
+  box-shadow: var(--brand-shadow);
+  transition: filter 0.12s ease, transform 0.12s ease, box-shadow 0.12s ease;
   white-space: nowrap;
 }
 
-.btn:hover { filter: brightness(1.08); }
+.btn:hover {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+  box-shadow: 0 10px 22px -6px rgba(66, 60, 220, 0.55);
+}
+
+.btn:active {
+  transform: translateY(0);
+  filter: brightness(0.98);
+}
 
 .btn:disabled {
   opacity: 0.6;
   cursor: wait;
+  transform: none;
 }
 
 .btn.secondary {
-  background: transparent;
-  color: var(--text-primary);
-  border: 1px solid var(--border);
+  background: var(--surface-1);
+  color: var(--brand-1);
+  border: 1.5px solid var(--brand-1);
+  box-shadow: none;
 }
 
-.btn.secondary:hover { background: var(--surface-2); }
+.btn.secondary:hover {
+  background: color-mix(in srgb, var(--brand-1) 10%, var(--surface-1));
+  filter: none;
+  box-shadow: 0 4px 12px -6px rgba(66, 60, 220, 0.35);
+}
 
 /* ---------- Tabla ---------- */
 
 .table-card {
   background: var(--surface-1);
   border: 1px solid var(--border);
-  border-radius: 10px;
-  box-shadow: var(--shadow-card);
+  border-radius: 12px;
+  box-shadow: 0 2px 6px -2px rgba(11,11,11,0.06), 0 20px 40px -24px rgba(11,11,11,0.18);
   overflow: auto;
   /* Único elemento que scrollea en toda la página: se estira para llenar
      el alto que le queda dentro de <main> (flex:1) y ahí adentro scrollea
@@ -424,12 +473,12 @@ thead th.sortable {
 }
 
 thead th.sortable:hover {
-  color: var(--text-primary);
+  color: var(--brand-1);
 }
 
 .sort-arrow {
   font-size: 10px;
-  color: var(--series-1);
+  color: var(--brand-1);
   margin-left: 3px;
 }
 
@@ -450,8 +499,9 @@ tbody tr:hover { background: var(--surface-2); }
   padding: 2px 7px;
   border-radius: 100px;
   font-size: 10.5px;
-  font-weight: 600;
+  font-weight: 700;
   color: #fff;
+  box-shadow: 0 1px 4px -1px rgba(11,11,11,0.35);
 }
 
 .badge-dot {
