@@ -83,7 +83,7 @@ function checkConfig() {
   if (!API_URL || API_URL === 'PEGAR_AQUI_URL_APPS_SCRIPT') {
     document.getElementById('configBanner').classList.add('show');
     document.getElementById('tablaBody').innerHTML =
-      '<tr><td colspan="21" class="empty-state">Configura API_URL en app.js para cargar datos.</td></tr>';
+      '<tr><td colspan="23" class="empty-state">Configura API_URL en app.js para cargar datos.</td></tr>';
     return false;
   }
   return true;
@@ -278,7 +278,7 @@ function renderTabla() {
   renderKpis(filtrados);
 
   if (filtrados.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="21" class="empty-state">Sin contenedores para estos filtros.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="23" class="empty-state">Sin contenedores para estos filtros.</td></tr>';
     return;
   }
 
@@ -299,8 +299,10 @@ function renderTabla() {
       <td>${naveViaje}</td>
       <td>${c.PO || ''}</td>
       <td>${c.OC_Odoo || ''}</td>
+      <td>${c.NumOrdenProveedor || ''}</td>
       <td>${ESTADO_OC_LABEL[c.EstadoOC] || c.EstadoOC || ''}</td>
       <td>${c.Proveedor || ''}</td>
+      <td>${c.PaisOrigen || ''}</td>
       <td>${c.Empresa || ''}</td>
       <td>${formatoUSD(c.ValorUSD)}</td>
       <td>${c.DiasLibres !== undefined && c.DiasLibres !== '' && c.DiasLibres !== null ? c.DiasLibres : ''}</td>
@@ -357,7 +359,7 @@ function cerrarModalDetalle() {
 
 async function cargarDatos() {
   if (!checkConfig()) return;
-  document.getElementById('tablaBody').innerHTML = '<tr><td colspan="21" class="empty-state">Cargando…</td></tr>';
+  document.getElementById('tablaBody').innerHTML = '<tr><td colspan="23" class="empty-state">Cargando…</td></tr>';
   try {
     const [maestroData, configData, detalleData] = await Promise.all([
       apiGet('maestro'),
@@ -372,7 +374,7 @@ async function cargarDatos() {
     actualizarUltimaSync(maestro);
   } catch (err) {
     document.getElementById('tablaBody').innerHTML =
-      `<tr><td colspan="21" class="empty-state">Error cargando datos: ${err.message}</td></tr>`;
+      `<tr><td colspan="23" class="empty-state">Error cargando datos: ${err.message}</td></tr>`;
   }
 }
 
