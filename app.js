@@ -147,9 +147,15 @@ function poblarFiltros() {
   selNav.innerHTML = '<option value="">Todas las navieras</option>' +
     navieras.map(n => `<option value="${n}">${n}</option>`).join('');
 
+  // Se arma con los valores reales presentes en el Maestro (no con la lista
+  // fija ESTADOS) para que nunca quede un valor guardado (mayúsculas,
+  // espacios, data vieja) que no calce con ninguna opción del filtro.
+  const estadoPrevio = document.getElementById('filtroEstado').value;
+  const estadosPresentes = [...new Set(maestro.map(c => c.EstadoActual).filter(Boolean))];
   const selEstado = document.getElementById('filtroEstado');
   selEstado.innerHTML = '<option value="">Todos los estados</option>' +
-    ESTADOS.map(e => `<option value="${e}">${ESTADO_LABEL[e] || e}</option>`).join('');
+    estadosPresentes.map(e => `<option value="${e}">${ESTADO_LABEL[e] || e}</option>`).join('');
+  if (estadosPresentes.includes(estadoPrevio)) selEstado.value = estadoPrevio;
 
   document.getElementById('listaNavieras').innerHTML =
     configNavieras.map(n => `<option value="${n.Naviera}">`).join('');
@@ -216,7 +222,7 @@ function aplicarFiltros(data) {
     if (empresa && c.Empresa !== empresa) return false;
     if (estadosOCSeleccionados.size > 0 && !estadosOCSeleccionados.has(c.EstadoOC)) return false;
     if (naviera && c.Naviera !== naviera) return false;
-    if (estado && c.EstadoActual !== estado) return false;
+    if (estado && String(c.EstadoActual || '').trim() !== estado.trim()) return false;
     if (retraso === 'si' && !(c.Retrasado === true || c.Retrasado === 'TRUE')) return false;
     if (retraso === 'no' && (c.Retrasado === true || c.Retrasado === 'TRUE')) return false;
     if (texto) {
