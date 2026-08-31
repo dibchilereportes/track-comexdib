@@ -339,14 +339,17 @@ function renderTabla() {
 
 // ---------- Modal detalle de productos ----------
 
+let detalleOCActual = ''; // OC abierta en el modal, usada por el botón Exportar a Excel
+
 function abrirModalDetalle(ocOdoo) {
+  detalleOCActual = ocOdoo;
   const lineas = detalleProductos.filter(d => d.OC_Odoo === ocOdoo);
   document.getElementById('detalleOCLabel').textContent = `OC ${ocOdoo}`;
   const tbody = document.getElementById('detalleTablaBody');
+  let totalUSD = 0;
   if (!lineas.length) {
-    tbody.innerHTML = '<tr><td colspan="5" class="empty-state">Sin líneas de producto para esta OC.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="3" class="empty-state">Sin líneas de producto para esta OC.</td></tr>';
   } else {
-    let totalUSD = 0;
     tbody.innerHTML = lineas.map(l => {
       totalUSD += Number(l.SubtotalUSD) || 0;
       return `
@@ -354,17 +357,25 @@ function abrirModalDetalle(ocOdoo) {
         <td>${l.Producto || ''}</td>
         <td>${l.SKU || ''}</td>
         <td>${l.Cantidad || ''}</td>
-        <td>${formatoUSD(l.PrecioUnitarioUSD)}</td>
-        <td>${formatoUSD(l.SubtotalUSD)}</td>
       </tr>`;
-    }).join('') + `
-      <tr class="detalle-total">
-        <td colspan="4">Total</td>
-        <td>${formatoUSD(totalUSD)}</td>
-      </tr>`;
+    }).join('');
   }
+  document.getElementById('detalleTotalUSD').textContent = lineas.length
+    ? `Total compra: ${formatoUSD(totalUSD)}`
+    : '';
   document.getElementById('modalDetalle').classList.add('open');
 }
+
+// Descarga directa desde el Web App (doGet devuelve el .xlsx como Blob, el
+// navegador lo baja solo) - no pasa por apiGet() porque esto no es JSON.
+function exportarDetalleExcel() {
+  if (!detalleOCActual) return;
+  const url = new URL(API_URL);
+  url.searchParams.set('action', 'exportDetalleOC');
+  url.searchParams.set('oc', detalleOCActual);
+  window.open(url.toString(), '_blank');
+}
+
 function cerrarModalDetalle() {
   document.getElementById('modalDetalle').classList.remove('open');
 }
@@ -541,6 +552,7 @@ function init() {
   document.getElementById('btnGuardarEstado').addEventListener('click', guardarEstado);
 
   document.getElementById('btnCerrarDetalle').addEventListener('click', cerrarModalDetalle);
+  document.getElementById('btnExportarDetalle').addEventListener('click', exportarDetalleExcel);
 
   document.getElementById('btnRefrescar').addEventListener('click', cargarDatos);
   ['filtroEmpresa','filtroNaviera','filtroEstado','filtroRetraso','filtroTexto'].forEach(id => {
