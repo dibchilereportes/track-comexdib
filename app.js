@@ -369,8 +369,19 @@ function cerrarModalDetalle() {
   document.getElementById('modalDetalle').classList.remove('open');
 }
 
+// Mientras carga: overlay con barco navegando encima de filtros + tabla, y los
+// controles quedan disabled de verdad (no solo tapados), para que no quede la
+// sensación de "esto no funciona" si alguien alcanza a hacer clic antes de que
+// el overlay termine de pintarse.
+function bloquearPanelDatos_(bloquear) {
+  document.getElementById('loadingOverlay').hidden = !bloquear;
+  document.querySelectorAll('#panelDatos select, #panelDatos input, #panelDatos button')
+    .forEach(el => { el.disabled = bloquear; });
+}
+
 async function cargarDatos() {
   if (!checkConfig()) return;
+  bloquearPanelDatos_(true);
   document.getElementById('tablaBody').innerHTML = '<tr><td colspan="23" class="empty-state">Cargando…</td></tr>';
   try {
     const [maestroData, configData, detalleData] = await Promise.all([
@@ -387,6 +398,8 @@ async function cargarDatos() {
   } catch (err) {
     document.getElementById('tablaBody').innerHTML =
       `<tr><td colspan="23" class="empty-state">Error cargando datos: ${err.message}</td></tr>`;
+  } finally {
+    bloquearPanelDatos_(false);
   }
 }
 

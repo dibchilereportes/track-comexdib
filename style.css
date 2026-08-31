@@ -284,6 +284,80 @@ main {
 .stat-tile.ok { background: linear-gradient(135deg, #16b84a, var(--status-good)); }
 .stat-tile.brand { background: var(--brand-grad); }
 
+/* ---------- Overlay de carga (bloquea filtros mientras no hay datos) ---------- */
+
+.panel-datos {
+  position: relative;
+}
+
+.loading-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--page-plane) 88%, transparent);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  text-align: center;
+  padding: 24px;
+}
+
+.loading-overlay[hidden] {
+  display: none;
+}
+
+.loading-overlay p {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--brand-1);
+}
+
+.ship-track {
+  position: relative;
+  width: 260px;
+  max-width: 70vw;
+  height: 40px;
+  overflow: hidden;
+}
+
+.ship-track::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 8px;
+  height: 2px;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--brand-2) 0, var(--brand-2) 8px,
+    transparent 8px, transparent 16px
+  );
+  opacity: 0.55;
+}
+
+.ship-track .ship {
+  position: absolute;
+  bottom: 4px;
+  left: -40px;
+  font-size: 26px;
+  animation: navegar 2.2s ease-in-out infinite;
+  filter: drop-shadow(0 3px 4px rgba(11,11,11,0.25));
+}
+
+@keyframes navegar {
+  0%   { left: -40px; transform: rotate(0deg); }
+  48%  { left: calc(100% + 10px); transform: rotate(0deg); }
+  50%  { left: calc(100% + 10px); transform: rotate(180deg) scaleY(-1); }
+  98%  { left: -40px; transform: rotate(180deg) scaleY(-1); }
+  100% { left: -40px; transform: rotate(0deg); }
+}
+
 /* ---------- Toolbar / filtros ---------- */
 
 .toolbar {
