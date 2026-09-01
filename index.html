@@ -103,6 +103,10 @@
           <th class="sortable" data-field="ValorUSD">Valor USD<span class="sort-arrow"></span></th>
           <th class="sortable" data-field="DiasLibres">Días libres<span class="sort-arrow"></span></th>
           <th>Puerto (POD)</th>
+          <th class="sortable" data-field="FechaLiberacionPOD">Liberación POD<span class="sort-arrow"></span></th>
+          <th>Despacho</th>
+          <th class="sortable" data-field="FechaRecepcionDestino">Recepción CD<span class="sort-arrow"></span></th>
+          <th>Días POD→CD</th>
           <th>ETA original</th>
           <th class="sortable" data-field="ETA_Actual">ETA actual<span class="sort-arrow"></span></th>
           <th class="sortable" data-field="EstadoActual">Estado<span class="sort-arrow"></span></th>
@@ -112,7 +116,7 @@
         </tr>
       </thead>
       <tbody id="tablaBody">
-        <tr><td colspan="23" class="empty-state">Cargando…</td></tr>
+        <tr><td colspan="27" class="empty-state">Cargando…</td></tr>
       </tbody>
     </table>
   </div>
@@ -161,6 +165,18 @@
         </select>
       </div>
       <div class="field"><label>ETA original</label><input type="date" id="f_eta"></div>
+      <div class="field">
+        <label>Fecha liberación POD</label>
+        <input type="date" id="f_fecha_liberacion">
+      </div>
+      <div class="field">
+        <label>Despacho</label>
+        <select id="f_tipo_despacho">
+          <option value="">Por definir</option>
+          <option value="Directo">Directo</option>
+          <option value="Indirecto">Indirecto</option>
+        </select>
+      </div>
       <div class="field"><label>Estado inicial</label>
         <select id="f_estado"></select>
       </div>
@@ -214,6 +230,18 @@
         </select>
       </div>
       <div class="field"><label>ETA original</label><input type="date" id="e_eta_original"></div>
+      <div class="field">
+        <label>Fecha liberación POD</label>
+        <input type="date" id="e_fecha_liberacion">
+      </div>
+      <div class="field">
+        <label>Despacho</label>
+        <select id="e_tipo_despacho">
+          <option value="">Por definir</option>
+          <option value="Directo">Directo</option>
+          <option value="Indirecto">Indirecto</option>
+        </select>
+      </div>
       <div class="field">
         <label>Fecha recepción en destino (CD)</label>
         <input type="date" id="e_fecha_recepcion">

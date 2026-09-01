@@ -96,7 +96,7 @@ function checkConfig() {
   if (!API_URL || API_URL === 'PEGAR_AQUI_URL_APPS_SCRIPT') {
     document.getElementById('configBanner').classList.add('show');
     document.getElementById('tablaBody').innerHTML =
-      '<tr><td colspan="23" class="empty-state">Configura API_URL en app.js para cargar datos.</td></tr>';
+      '<tr><td colspan="27" class="empty-state">Configura API_URL en app.js para cargar datos.</td></tr>';
     return false;
   }
   return true;
@@ -120,6 +120,30 @@ function badgeEstado(estado) {
   const color = ESTADO_COLOR[estado] || 'var(--seq-450)';
   const label = ESTADO_LABEL[estado] || estado || '—';
   return `<span class="badge" style="background:${color}">${label}</span>`;
+}
+
+function badgeDespacho(tipo) {
+  if (!tipo) return '';
+  const color = tipo === 'Directo' ? 'var(--status-good)' : 'var(--status-warning)';
+  return `<span class="badge" style="background:${color}">${tipo}</span>`;
+}
+
+// Días entre Liberación POD (retiro desde puerto) y Recepción en destino
+// (CD) - el control de tránsito puerto->CD que se pidió agregar. Si aún no
+// hay recepción registrada, muestra los días transcurridos "en curso" desde
+// la liberación para no dejar la columna en blanco mientras se espera.
+function diasPodACD(c) {
+  if (!c.FechaLiberacionPOD) return '';
+  const liberacion = new Date(c.FechaLiberacionPOD);
+  if (isNaN(liberacion)) return '';
+  if (c.FechaRecepcionDestino) {
+    const recepcion = new Date(c.FechaRecepcionDestino);
+    if (isNaN(recepcion)) return '';
+    const dias = Math.round((recepcion - liberacion) / 86400000);
+    return `${dias} d`;
+  }
+  const dias = Math.round((new Date() - liberacion) / 86400000);
+  return `${dias} d (en curso)`;
 }
 
 function poblarFiltros() {
@@ -302,7 +326,7 @@ function renderTabla() {
   renderKpis(filtrados);
 
   if (filtrados.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="23" class="empty-state">Sin contenedores para estos filtros.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="27" class="empty-state">Sin contenedores para estos filtros.</td></tr>';
     return;
   }
 
@@ -331,6 +355,10 @@ function renderTabla() {
       <td>${formatoUSD(c.ValorUSD)}</td>
       <td>${c.DiasLibres !== undefined && c.DiasLibres !== '' && c.DiasLibres !== null ? c.DiasLibres : ''}</td>
       <td>${c.PuertoDestino || ''}</td>
+      <td>${c.FechaLiberacionPOD || ''}</td>
+      <td>${badgeDespacho(c.TipoDespacho)}</td>
+      <td>${c.FechaRecepcionDestino || ''}</td>
+      <td>${diasPodACD(c)}</td>
       <td>${c.ETA_Original || ''}</td>
       <td>${c.ETA_Actual || ''}</td>
       <td>${badgeEstado(c.EstadoActual)}${(c.PendienteRevision === true || c.PendienteRevision === 'TRUE') ? '<span class="pill-pendiente">pendiente revisión</span>' : ''}</td>
@@ -426,7 +454,7 @@ function bloquearPanelDatos_(bloquear) {
 async function cargarDatos() {
   if (!checkConfig()) return;
   bloquearPanelDatos_(true);
-  document.getElementById('tablaBody').innerHTML = '<tr><td colspan="23" class="empty-state">Cargando…</td></tr>';
+  document.getElementById('tablaBody').innerHTML = '<tr><td colspan="27" class="empty-state">Cargando…</td></tr>';
   try {
     const [maestroData, configData, detalleData] = await Promise.all([
       apiGet('maestro'),
@@ -441,7 +469,7 @@ async function cargarDatos() {
     actualizarUltimaSync(maestro);
   } catch (err) {
     document.getElementById('tablaBody').innerHTML =
-      `<tr><td colspan="23" class="empty-state">Error cargando datos: ${err.message}</td></tr>`;
+      `<tr><td colspan="27" class="empty-state">Error cargando datos: ${err.message}</td></tr>`;
   } finally {
     bloquearPanelDatos_(false);
   }
@@ -472,6 +500,8 @@ async function guardarNuevo() {
     PuertoDestino: document.getElementById('f_puerto').value,
     ETA_Original: document.getElementById('f_eta').value,
     ETA_Actual: document.getElementById('f_eta').value,
+    FechaLiberacionPOD: document.getElementById('f_fecha_liberacion').value,
+    TipoDespacho: document.getElementById('f_tipo_despacho').value,
     EstadoActual: document.getElementById('f_estado').value,
     Notas: document.getElementById('f_notas').value.trim()
   };
@@ -482,9 +512,10 @@ async function guardarNuevo() {
   await conBotonCargando('btnGuardarNuevo', async () => {
     await apiPost('addContainer', data);
     cerrarModalNuevo();
-    ['f_contenedor','f_bl','f_booking','f_naviera','f_nave','f_viaje','f_po','f_oc','f_proveedor','f_valor','f_eta','f_notas']
+    ['f_contenedor','f_bl','f_booking','f_naviera','f_nave','f_viaje','f_po','f_oc','f_proveedor','f_valor','f_eta','f_notas','f_fecha_liberacion']
       .forEach(id => document.getElementById(id).value = '');
     document.getElementById('f_tipo').value = '';
+    document.getElementById('f_tipo_despacho').value = '';
     document.getElementById('f_puerto').value = '';
     await cargarDatos();
   });
@@ -520,6 +551,8 @@ function abrirModalEstado(id) {
   document.getElementById('e_valor').value = c.ValorUSD || '';
   document.getElementById('e_puerto').value = c.PuertoDestino || '';
   document.getElementById('e_eta_original').value = c.ETA_Original || '';
+  document.getElementById('e_fecha_liberacion').value = c.FechaLiberacionPOD || '';
+  document.getElementById('e_tipo_despacho').value = c.TipoDespacho || '';
   document.getElementById('e_fecha_recepcion').value = c.FechaRecepcionDestino || '';
   document.getElementById('modalEstado').classList.add('open');
 }
@@ -547,6 +580,8 @@ async function guardarEstado() {
     ValorUSD: document.getElementById('e_valor').value,
     PuertoDestino: document.getElementById('e_puerto').value,
     ETA_Original: document.getElementById('e_eta_original').value,
+    FechaLiberacionPOD: document.getElementById('e_fecha_liberacion').value,
+    TipoDespacho: document.getElementById('e_tipo_despacho').value,
     FechaRecepcionDestino: document.getElementById('e_fecha_recepcion').value
   };
   await conBotonCargando('btnGuardarEstado', async () => {
