@@ -58,6 +58,18 @@ const ESTADO_OC_LABEL = {
   'done':        'Cerrado'
 };
 
+// Mismo criterio que ordenCerradaDeVerdad_() en Code.gs: una OC de
+// importación anticipada ("Entregar a" = Importación Anticipada: Recepciones)
+// puede quedar Cerrada en Odoo sin haber llegado físicamente al CD -> sigue
+// tratándose como activa hasta que se registre FechaRecepcionDestino a mano.
+const ENTREGA_A_IMPORTACION_ANTICIPADA = 'Importación Anticipada: Recepciones';
+function ordenCerradaDeVerdad(c) {
+  if (c.EstadoOC !== 'done') return false;
+  const esImportacionAnticipada = String(c.EntregaA || '').trim() === ENTREGA_A_IMPORTACION_ANTICIPADA;
+  if (esImportacionAnticipada && !c.FechaRecepcionDestino) return false;
+  return true;
+}
+
 async function apiGet(action, params) {
   const url = new URL(API_URL);
   url.searchParams.set('action', action);
@@ -121,7 +133,7 @@ function poblarFiltros() {
   // "Cerrado" (OC en estado 'done', ya recibidas) no aparece como opción de
   // filtro salvo que "Mostrar cerrados" esté activo — no forman parte del
   // control activo, solo se pueden consultar prendiendo el toggle.
-  const baseFiltro = mostrarCerrados ? maestro : maestro.filter(c => c.EstadoOC !== 'done');
+  const baseFiltro = mostrarCerrados ? maestro : maestro.filter(c => !ordenCerradaDeVerdad(c));
   const estadosOC = [...new Set(baseFiltro.map(c => c.EstadoOC).filter(Boolean))];
   // Limpia selecciones que ya no existan en los datos actuales.
   [...estadosOCSeleccionados].forEach(v => { if (!estadosOC.includes(v)) estadosOCSeleccionados.delete(v); });
@@ -283,7 +295,7 @@ function formatoUSD(valor) {
 }
 
 function renderTabla() {
-  const base = mostrarCerrados ? maestro : maestro.filter(c => c.EstadoOC !== 'done');
+  const base = mostrarCerrados ? maestro : maestro.filter(c => !ordenCerradaDeVerdad(c));
   const filtrados = ordenarDatos(aplicarFiltros(base));
   const tbody = document.getElementById('tablaBody');
   actualizarFlechasOrden();
@@ -312,7 +324,7 @@ function renderTabla() {
       <td>${c.PO || ''}</td>
       <td>${c.OC_Odoo || ''}</td>
       <td>${c.NumOrdenProveedor || ''}</td>
-      <td>${ESTADO_OC_LABEL[c.EstadoOC] || c.EstadoOC || ''}</td>
+      <td>${ESTADO_OC_LABEL[c.EstadoOC] || c.EstadoOC || ''}${(c.EstadoOC === 'done' && !ordenCerradaDeVerdad(c)) ? '<span class="pill-pendiente" title="Cerrada en Odoo (importación anticipada), pero aún no se registra la recepción en destino">imp. anticipada</span>' : ''}</td>
       <td>${c.Proveedor || ''}</td>
       <td>${c.PaisOrigen || ''}</td>
       <td>${c.Empresa || ''}</td>
@@ -366,14 +378,35 @@ function abrirModalDetalle(ocOdoo) {
   document.getElementById('modalDetalle').classList.add('open');
 }
 
-// Descarga directa desde el Web App (doGet devuelve el .xlsx como Blob, el
-// navegador lo baja solo) - no pasa por apiGet() porque esto no es JSON.
-function exportarDetalleExcel() {
+// El Web App manda el .xlsx codificado en base64 dentro del JSON de siempre
+// (Apps Script no admite devolver un Blob directo desde doGet) - acá se
+// decodifica y se arma la descarga del lado del navegador.
+async function exportarDetalleExcel() {
   if (!detalleOCActual) return;
-  const url = new URL(API_URL);
-  url.searchParams.set('action', 'exportDetalleOC');
-  url.searchParams.set('oc', detalleOCActual);
-  window.open(url.toString(), '_blank');
+  const btn = document.getElementById('btnExportarDetalle');
+  const textoOriginal = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Generando…';
+  try {
+    const data = await apiGet('exportDetalleOC', { oc: detalleOCActual });
+    const bytes = Uint8Array.from(atob(data.base64), c => c.charCodeAt(0));
+    const blob = new Blob([bytes], {
+      type: data.mimeType || 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = data.filename || `Detalle ${detalleOCActual}.xlsx`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  } catch (err) {
+    alert('Error generando el Excel: ' + err.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = textoOriginal;
+  }
 }
 
 function cerrarModalDetalle() {
@@ -466,9 +499,13 @@ function abrirModalEstado(id) {
   if (!c) return;
   idEnEdicion = id;
   const url = urlNaviera(c.Naviera);
+  const avisoImportacionAnticipada = (c.EstadoOC === 'done' && !ordenCerradaDeVerdad(c))
+    ? '<br><span style="color:var(--brand-pop);font-weight:600;">Cerrada en Odoo por importación anticipada — registra la fecha de recepción en destino abajo para sacarla del tracking activo.</span>'
+    : '';
   document.getElementById('estadoContenedorLabel').innerHTML =
     `${c.Contenedor || c.MasterBL} — ${c.Naviera || ''}` +
-    (url ? ` · <a href="${url}" target="_blank" rel="noopener">Abrir sitio de la naviera ↗</a>` : '');
+    (url ? ` · <a href="${url}" target="_blank" rel="noopener">Abrir sitio de la naviera ↗</a>` : '') +
+    avisoImportacionAnticipada;
   document.getElementById('e_estado').value = c.EstadoActual;
   document.getElementById('e_eta').value = c.ETA_Actual || '';
   document.getElementById('e_notas').value = '';
@@ -483,6 +520,7 @@ function abrirModalEstado(id) {
   document.getElementById('e_valor').value = c.ValorUSD || '';
   document.getElementById('e_puerto').value = c.PuertoDestino || '';
   document.getElementById('e_eta_original').value = c.ETA_Original || '';
+  document.getElementById('e_fecha_recepcion').value = c.FechaRecepcionDestino || '';
   document.getElementById('modalEstado').classList.add('open');
 }
 function cerrarModalEstado() {
@@ -508,7 +546,8 @@ async function guardarEstado() {
     Proveedor: document.getElementById('e_proveedor').value.trim(),
     ValorUSD: document.getElementById('e_valor').value,
     PuertoDestino: document.getElementById('e_puerto').value,
-    ETA_Original: document.getElementById('e_eta_original').value
+    ETA_Original: document.getElementById('e_eta_original').value,
+    FechaRecepcionDestino: document.getElementById('e_fecha_recepcion').value
   };
   await conBotonCargando('btnGuardarEstado', async () => {
     // En paralelo, no en serie: corta a la mitad el tiempo de espera.
