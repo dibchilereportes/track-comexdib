@@ -43,7 +43,7 @@ const ESTADO_COLOR = {
 let maestro = [];
 let configNavieras = [];
 let detalleProductos = [];
-let orden = { campo: 'FechaEsperadaOC', dir: -1 }; // -1 = más nueva primero
+let orden = { campo: 'ETA_Actual', dir: -1 }; // -1 = más nueva primero
 let estadosOCSeleccionados = new Set(); // vacío = "todos"
 let mostrarCerrados = false; // OC en estado 'done' (Cerrado): ya recibidas, fuera del control por defecto
 
@@ -102,7 +102,7 @@ function checkConfig() {
   if (!API_URL || API_URL === 'PEGAR_AQUI_URL_APPS_SCRIPT') {
     document.getElementById('configBanner').classList.add('show');
     document.getElementById('tablaBody').innerHTML =
-      '<tr><td colspan="27" class="empty-state">Configura API_URL en app.js para cargar datos.</td></tr>';
+      '<tr><td colspan="28" class="empty-state">Configura API_URL en app.js para cargar datos.</td></tr>';
     return false;
   }
   return true;
@@ -332,7 +332,7 @@ function renderTabla() {
   renderKpis(filtrados);
 
   if (filtrados.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="27" class="empty-state">Sin contenedores para estos filtros.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="28" class="empty-state">Sin contenedores para estos filtros.</td></tr>';
     return;
   }
 
@@ -344,6 +344,9 @@ function renderTabla() {
     const naveViaje = [c.Nave, c.Viaje].filter(Boolean).join(' / ');
     return `
     <tr>
+      <td>${c.ETA_Actual || ''}</td>
+      <td>${c.CarpetaImp || ''}</td>
+      <td>${c.OC_Odoo || ''}</td>
       <td>${c.FechaEsperadaOC || ''}</td>
       <td><strong>${c.Contenedor || ''}</strong></td>
       <td>${c.TipoContenedor || ''}</td>
@@ -352,7 +355,6 @@ function renderTabla() {
       <td>${c.Naviera || ''}</td>
       <td>${naveViaje}</td>
       <td>${c.PO || ''}</td>
-      <td>${c.OC_Odoo || ''}</td>
       <td>${c.NumOrdenProveedor || ''}</td>
       <td>${ESTADO_OC_LABEL[c.EstadoOC] || c.EstadoOC || ''}${(c.EstadoOC === 'done' && !ordenCerradaDeVerdad(c)) ? '<span class="pill-pendiente" title="Cerrada en Odoo (importación anticipada), pero aún no se registra la recepción en destino">imp. anticipada</span>' : ''}</td>
       <td>${c.Proveedor || ''}</td>
@@ -366,7 +368,6 @@ function renderTabla() {
       <td>${c.FechaRecepcionDestino || ''}</td>
       <td>${diasPodACD(c)}</td>
       <td>${c.ETA_Original || ''}</td>
-      <td>${c.ETA_Actual || ''}</td>
       <td>${badgeEstado(c.EstadoActual)}${(c.PendienteRevision === true || c.PendienteRevision === 'TRUE') ? '<span class="pill-pendiente">pendiente revisión</span>' : ''}</td>
       <td>${badgeRetraso(c)}</td>
       <td>${c.FechaUltimoUpdate || ''}</td>
@@ -460,7 +461,7 @@ function bloquearPanelDatos_(bloquear) {
 async function cargarDatos() {
   if (!checkConfig()) return;
   bloquearPanelDatos_(true);
-  document.getElementById('tablaBody').innerHTML = '<tr><td colspan="27" class="empty-state">Cargando…</td></tr>';
+  document.getElementById('tablaBody').innerHTML = '<tr><td colspan="28" class="empty-state">Cargando…</td></tr>';
   try {
     const [maestroData, configData, detalleData] = await Promise.all([
       apiGet('maestro'),
@@ -475,7 +476,7 @@ async function cargarDatos() {
     actualizarUltimaSync(maestro);
   } catch (err) {
     document.getElementById('tablaBody').innerHTML =
-      `<tr><td colspan="27" class="empty-state">Error cargando datos: ${err.message}</td></tr>`;
+      `<tr><td colspan="28" class="empty-state">Error cargando datos: ${err.message}</td></tr>`;
   } finally {
     bloquearPanelDatos_(false);
   }
