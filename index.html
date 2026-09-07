@@ -25,6 +25,13 @@
 
 <main>
 
+  <div class="view-tabs" style="display:flex;gap:8px;margin:0 0 14px;">
+    <button type="button" class="btn accent" id="tabTracking">Tracking</button>
+    <button type="button" class="btn secondary" id="tabControlEta">Control ETA</button>
+  </div>
+
+  <div id="viewTracking">
+
   <div id="configBanner" class="config-banner">
     Falta configurar la URL del backend. Edita <code>app.js</code> y reemplaza
     <code>API_URL</code> por la URL de tu Apps Script Web App (ver README).
@@ -124,6 +131,53 @@
       </tbody>
     </table>
   </div>
+  </div>
+
+  </div>
+
+  <div id="viewControlEta" hidden>
+    <p style="color:var(--text-secondary);font-size:13px;margin:0 0 14px;">
+      Compara la ETA original (primera fecha esperada registrada al crear la OC en Odoo, congelada)
+      contra la ETA actual (se actualiza con el tracker) y calcula los días de desvío entre ambas.
+    </p>
+
+    <div class="kpi-row" id="kpiRowEta"></div>
+
+    <div class="toolbar">
+      <div class="filters">
+        <div class="field-inline">
+          <label for="filtroEmpresaEta">Empresa</label>
+          <select id="filtroEmpresaEta"><option value="">Todas</option></select>
+        </div>
+      </div>
+      <div class="toolbar-actions">
+        <label class="check-inline" for="filtroMostrarCerradosEta">
+          <input type="checkbox" id="filtroMostrarCerradosEta">
+          Mostrar cerrados
+        </label>
+      </div>
+    </div>
+
+    <div class="table-card">
+      <table>
+        <thead>
+          <tr>
+            <th>Empresa</th>
+            <th>OC Odoo</th>
+            <th>Carpeta imp</th>
+            <th>Contenedor</th>
+            <th>Proveedor</th>
+            <th>ETA original</th>
+            <th>ETA actual</th>
+            <th>Días desvío</th>
+            <th>Estado</th>
+          </tr>
+        </thead>
+        <tbody id="tablaEtaBody">
+          <tr><td colspan="9" class="empty-state">Cargando…</td></tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 
 </main>

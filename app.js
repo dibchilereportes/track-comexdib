@@ -157,6 +157,114 @@ function diasPodACD(c) {
   return `${dias} d (en curso)`;
 }
 
+// ---------- Pestaña Control ETA (desvío ETA original vs ETA actual) ----------
+
+let mostrarCerradosEta = false;
+
+// Días entre ETA original (primer "Fecha esperada" registrado, congelado) y
+// ETA actual (se mueve solo cuando el tracker/manual confirma una fecha
+// real distinta). Positivo = la carga se atrasó respecto al compromiso
+// original; negativo = se adelantó. null = falta alguna de las dos fechas.
+function diasDesvioEta(c) {
+  if (!c.ETA_Original || !c.ETA_Actual) return null;
+  const original = new Date(c.ETA_Original);
+  const actual = new Date(c.ETA_Actual);
+  if (isNaN(original) || isNaN(actual)) return null;
+  return Math.round((actual - original) / 86400000);
+}
+
+function badgeDesvio(dias) {
+  if (dias === null) {
+    return '<span class="badge" style="background:var(--surface-2);color:var(--text-secondary)">Sin dato</span>';
+  }
+  if (dias > 0) {
+    return `<span class="badge delay-critical"><span class="badge-dot"></span>+${dias} d atraso</span>`;
+  }
+  if (dias < 0) {
+    return `<span class="badge delay-ok"><span class="badge-dot"></span>${dias} d adelanto</span>`;
+  }
+  return '<span class="badge delay-ok"><span class="badge-dot"></span>En fecha</span>';
+}
+
+function poblarFiltroEmpresaEta() {
+  const empresas = [...new Set(maestro.map(c => c.Empresa).filter(Boolean))].sort();
+  const sel = document.getElementById('filtroEmpresaEta');
+  const previa = sel.value;
+  sel.innerHTML = '<option value="">Todas las empresas</option>' +
+    empresas.map(e => `<option value="${e}">${e}</option>`).join('');
+  if (empresas.includes(previa)) sel.value = previa;
+}
+
+function renderKpisEta(data) {
+  const conDato = data.filter(c => c._diasDesvio !== null);
+  const promedio = conDato.length ? conDato.reduce((s, c) => s + c._diasDesvio, 0) / conDato.length : 0;
+  const atrasados = conDato.filter(c => c._diasDesvio > 0).length;
+  const adelantados = conDato.filter(c => c._diasDesvio < 0).length;
+  const kpis = [
+    { label: 'Con ambas fechas registradas', val: conDato.length, cls: 'brand' },
+    { label: 'Promedio días desvío', val: `${promedio > 0 ? '+' : ''}${promedio.toFixed(1)} d`, cls: promedio > 0 ? 'alert' : 'ok' },
+    { label: 'Con atraso vs ETA original', val: atrasados, cls: atrasados > 0 ? 'alert' : 'ok' },
+    { label: 'Con adelanto vs ETA original', val: adelantados, cls: 'brand' }
+  ];
+  document.getElementById('kpiRowEta').innerHTML = kpis.map(k =>
+    `<div class="stat-tile ${k.cls}"><div class="label">${k.label}</div><div class="value">${k.val}</div></div>`
+  ).join('');
+}
+
+function renderControlEta() {
+  const base = mostrarCerradosEta ? maestro : maestro.filter(c => !ordenCerradaDeVerdad(c));
+  const empresa = document.getElementById('filtroEmpresaEta').value;
+  let filtrados = base.filter(c => !empresa || c.Empresa === empresa);
+  filtrados = filtrados.map(c => Object.assign({}, c, { _diasDesvio: diasDesvioEta(c) }));
+  // Mayor atraso primero; sin dato al final.
+  filtrados.sort((a, b) => {
+    if (a._diasDesvio === null && b._diasDesvio === null) return 0;
+    if (a._diasDesvio === null) return 1;
+    if (b._diasDesvio === null) return -1;
+    return b._diasDesvio - a._diasDesvio;
+  });
+
+  renderKpisEta(filtrados);
+
+  const tbody = document.getElementById('tablaEtaBody');
+  if (filtrados.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="9" class="empty-state">Sin contenedores para estos filtros.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = filtrados.map(c => `
+    <tr>
+      <td>${c.Empresa || ''}</td>
+      <td>${c.OC_Odoo || ''}</td>
+      <td>${c.CarpetaImp || ''}</td>
+      <td>${c.Contenedor || ''}</td>
+      <td>${c.Proveedor || ''}</td>
+      <td>${c.ETA_Original || ''}</td>
+      <td>${c.ETA_Actual || ''}</td>
+      <td>${badgeDesvio(c._diasDesvio)}</td>
+      <td>${badgeEstado(c.EstadoActual)}</td>
+    </tr>
+  `).join('');
+}
+
+function initTabs() {
+  const tabTracking = document.getElementById('tabTracking');
+  const tabEta = document.getElementById('tabControlEta');
+  const viewTracking = document.getElementById('viewTracking');
+  const viewEta = document.getElementById('viewControlEta');
+  function activar(tab) {
+    const esTracking = tab === 'tracking';
+    viewTracking.hidden = !esTracking;
+    viewEta.hidden = esTracking;
+    tabTracking.classList.toggle('accent', esTracking);
+    tabTracking.classList.toggle('secondary', !esTracking);
+    tabEta.classList.toggle('accent', !esTracking);
+    tabEta.classList.toggle('secondary', esTracking);
+    if (!esTracking) renderControlEta();
+  }
+  tabTracking.addEventListener('click', () => activar('tracking'));
+  tabEta.addEventListener('click', () => activar('eta'));
+}
+
 function poblarFiltros() {
   const empresas = [...new Set(maestro.map(c => c.Empresa).filter(Boolean))].sort();
   const selEmp = document.getElementById('filtroEmpresa');
@@ -511,6 +619,8 @@ async function cargarDatos() {
     detalleProductos = detalleData;
     poblarFiltros();
     renderTabla();
+    poblarFiltroEmpresaEta();
+    renderControlEta();
     actualizarUltimaSync(maestro);
   } catch (err) {
     document.getElementById('tablaBody').innerHTML =
@@ -684,6 +794,12 @@ function init() {
   });
   initMultiselectEstadoOC();
   initMultiselectEstado();
+  initTabs();
+  document.getElementById('filtroEmpresaEta').addEventListener('change', renderControlEta);
+  document.getElementById('filtroMostrarCerradosEta').addEventListener('change', (e) => {
+    mostrarCerradosEta = e.target.checked;
+    renderControlEta();
+  });
 
   document.querySelectorAll('th.sortable').forEach(th => {
     th.addEventListener('click', () => {
