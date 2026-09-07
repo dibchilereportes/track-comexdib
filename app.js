@@ -45,6 +45,7 @@ let configNavieras = [];
 let detalleProductos = [];
 let orden = { campo: 'ETA_Actual', dir: -1 }; // -1 = más nueva primero
 let estadosOCSeleccionados = new Set(); // vacío = "todos"
+let estadosSeleccionados = new Set(); // Estado tracking (EstadoActual) - vacío = "todos"
 let mostrarCerrados = false; // OC en estado 'done' (Cerrado): ya recibidas, fuera del control por defecto
 
 // Etiqueta en español para el estado de la OC en Odoo (draft/sent/purchase/
@@ -68,6 +69,10 @@ const ENTREGA_A_IMPORTACION_ANTICIPADA = 'Importación Anticipada: Recepciones';
 const FECHA_DESDE_IMPORTACION_ANTICIPADA = '2026-08-01';
 const FECHA_HASTA_IMPORTACION_ANTICIPADA = '2026-08-31';
 function ordenCerradaDeVerdad(c) {
+  // Referencia preliminar (sin /N) ya reemplazada por una o más referencias
+  // con índice de contenedor (misma base, /1, /2...) - queda fuera de las
+  // vistas activas sin importar su EstadoOC (ver sincronizarOdooAPI en Code.gs).
+  if (c.ReferenciaSuperada === true || c.ReferenciaSuperada === 'TRUE') return true;
   if (c.EstadoOC !== 'done') return false;
   const esImportacionAnticipada = String(c.EntregaA || '').trim() === ENTREGA_A_IMPORTACION_ANTICIPADA;
   const fechaConf = String(c.FechaConfirmacionOC || '');
@@ -192,12 +197,25 @@ function poblarFiltros() {
   // Se arma con los valores reales presentes en el Maestro (no con la lista
   // fija ESTADOS) para que nunca quede un valor guardado (mayúsculas,
   // espacios, data vieja) que no calce con ninguna opción del filtro.
-  const estadoPrevio = document.getElementById('filtroEstado').value;
+  // Multiselect igual al de Estado OC - misma UI, mismo patrón.
   const estadosPresentes = [...new Set(maestro.map(c => c.EstadoActual).filter(Boolean))];
-  const selEstado = document.getElementById('filtroEstado');
-  selEstado.innerHTML = '<option value="">Todos los estados</option>' +
-    estadosPresentes.map(e => `<option value="${e}">${ESTADO_LABEL[e] || e}</option>`).join('');
-  if (estadosPresentes.includes(estadoPrevio)) selEstado.value = estadoPrevio;
+  [...estadosSeleccionados].forEach(v => { if (!estadosPresentes.includes(v)) estadosSeleccionados.delete(v); });
+  const panelEstado = document.getElementById('filtroEstadoPanel');
+  panelEstado.innerHTML = estadosPresentes.map(e => `
+    <label class="multiselect-option">
+      <input type="checkbox" value="${e}" ${estadosSeleccionados.has(e) ? 'checked' : ''}>
+      ${ESTADO_LABEL[e] || e}
+    </label>
+  `).join('') || '<div class="multiselect-empty">Sin datos aún</div>';
+  panelEstado.querySelectorAll('input[type="checkbox"]').forEach(chk => {
+    chk.addEventListener('change', () => {
+      if (chk.checked) estadosSeleccionados.add(chk.value);
+      else estadosSeleccionados.delete(chk.value);
+      actualizarBotonEstado();
+      renderTabla();
+    });
+  });
+  actualizarBotonEstado();
 
   document.getElementById('listaNavieras').innerHTML =
     configNavieras.map(n => `<option value="${n.Naviera}">`).join('');
@@ -215,6 +233,27 @@ function actualizarBotonEstadoOC() {
 function initMultiselectEstadoOC() {
   const wrap = document.getElementById('filtroEstadoOCWrap');
   const btn = document.getElementById('filtroEstadoOCBtn');
+  btn.addEventListener('click', (ev) => {
+    ev.stopPropagation();
+    wrap.classList.toggle('open');
+  });
+  document.addEventListener('click', (ev) => {
+    if (!wrap.contains(ev.target)) wrap.classList.remove('open');
+  });
+}
+
+function actualizarBotonEstado() {
+  const btn = document.getElementById('filtroEstadoBtn');
+  const n = estadosSeleccionados.size;
+  if (n === 0) btn.textContent = 'Todos';
+  else if (n === 1) btn.textContent = ESTADO_LABEL[[...estadosSeleccionados][0]] || [...estadosSeleccionados][0];
+  else btn.textContent = `${n} seleccionados`;
+  btn.classList.toggle('active', n > 0);
+}
+
+function initMultiselectEstado() {
+  const wrap = document.getElementById('filtroEstadoWrap');
+  const btn = document.getElementById('filtroEstadoBtn');
   btn.addEventListener('click', (ev) => {
     ev.stopPropagation();
     wrap.classList.toggle('open');
@@ -256,7 +295,6 @@ function actualizarUltimaSync(data) {
 function aplicarFiltros(data) {
   const empresa = document.getElementById('filtroEmpresa').value;
   const naviera = document.getElementById('filtroNaviera').value;
-  const estado = document.getElementById('filtroEstado').value;
   const retraso = document.getElementById('filtroRetraso').value;
   const texto = document.getElementById('filtroTexto').value.trim().toLowerCase();
 
@@ -264,7 +302,7 @@ function aplicarFiltros(data) {
     if (empresa && c.Empresa !== empresa) return false;
     if (estadosOCSeleccionados.size > 0 && !estadosOCSeleccionados.has(c.EstadoOC)) return false;
     if (naviera && c.Naviera !== naviera) return false;
-    if (estado && String(c.EstadoActual || '').trim() !== estado.trim()) return false;
+    if (estadosSeleccionados.size > 0 && !estadosSeleccionados.has(c.EstadoActual)) return false;
     if (retraso === 'si' && !(c.Retrasado === true || c.Retrasado === 'TRUE')) return false;
     if (retraso === 'no' && (c.Retrasado === true || c.Retrasado === 'TRUE')) return false;
     if (texto) {
@@ -636,7 +674,7 @@ function init() {
   document.getElementById('btnExportarDetalle').addEventListener('click', exportarDetalleExcel);
 
   document.getElementById('btnRefrescar').addEventListener('click', cargarDatos);
-  ['filtroEmpresa','filtroNaviera','filtroEstado','filtroRetraso','filtroTexto'].forEach(id => {
+  ['filtroEmpresa','filtroNaviera','filtroRetraso','filtroTexto'].forEach(id => {
     document.getElementById(id).addEventListener('input', renderTabla);
   });
   document.getElementById('filtroMostrarCerrados').addEventListener('change', (e) => {
@@ -645,6 +683,7 @@ function init() {
     renderTabla();
   });
   initMultiselectEstadoOC();
+  initMultiselectEstado();
 
   document.querySelectorAll('th.sortable').forEach(th => {
     th.addEventListener('click', () => {

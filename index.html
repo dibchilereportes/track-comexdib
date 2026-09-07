@@ -56,8 +56,11 @@
         <select id="filtroNaviera"><option value="">Todas</option></select>
       </div>
       <div class="field-inline">
-        <label for="filtroEstado">Estado tracking</label>
-        <select id="filtroEstado"><option value="">Todos</option></select>
+        <label>Estado tracking</label>
+        <div class="multiselect" id="filtroEstadoWrap">
+          <button type="button" class="multiselect-btn" id="filtroEstadoBtn">Todos</button>
+          <div class="multiselect-panel" id="filtroEstadoPanel"></div>
+        </div>
       </div>
       <div class="field-inline">
         <label for="filtroRetraso">Retraso</label>
