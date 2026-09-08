@@ -219,6 +219,20 @@ main {
   flex-direction: column;
 }
 
+/* Contenedores de cada pestaña (Tracking / Control ETA): deben heredar el
+   flex:1;min-height:0 de <main> para que el scroll interno de .table-card
+   siga funcionando - si no, el listado crece sin límite y como <body> tiene
+   overflow:hidden, la parte de abajo queda inaccesible (sin scrollbar). */
+.view-tabs { flex-shrink: 0; }
+/* :not([hidden]) para no pisar el display:none del atributo hidden que usa
+   app.js para alternar entre pestañas. */
+#viewTracking:not([hidden]), #viewControlEta:not([hidden]) {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
 /* ---------- KPI stat tiles ---------- */
 
 .kpi-row {
