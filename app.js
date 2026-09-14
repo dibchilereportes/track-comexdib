@@ -42,7 +42,6 @@ const ESTADO_COLOR = {
 
 let maestro = [];
 let configNavieras = [];
-let detalleProductos = [];
 let orden = { campo: 'ETA_Actual', dir: -1 }; // -1 = más nueva primero
 let estadosOCSeleccionados = new Set(); // vacío = "todos"
 let estadosSeleccionados = new Set(); // Estado tracking (EstadoActual) - vacío = "todos"
@@ -534,11 +533,22 @@ function renderTabla() {
 
 let detalleOCActual = ''; // OC abierta en el modal, usada por el botón Exportar a Excel
 
-function abrirModalDetalle(ocOdoo) {
+async function abrirModalDetalle(ocOdoo) {
   detalleOCActual = ocOdoo;
-  const lineas = detalleProductos.filter(d => d.OC_Odoo === ocOdoo);
   document.getElementById('detalleOCLabel').textContent = `OC ${ocOdoo}`;
   const tbody = document.getElementById('detalleTablaBody');
+  document.getElementById('detalleTotalUSD').textContent = '';
+  tbody.innerHTML = '<tr><td colspan="3" class="empty-state">Cargando…</td></tr>';
+  document.getElementById('modalDetalle').classList.add('open');
+
+  let lineas = [];
+  try {
+    lineas = await apiGet('detalle', { oc: ocOdoo });
+  } catch (err) {
+    tbody.innerHTML = `<tr><td colspan="3" class="empty-state">Error cargando el detalle: ${err.message}</td></tr>`;
+    return;
+  }
+
   let totalUSD = 0;
   if (!lineas.length) {
     tbody.innerHTML = '<tr><td colspan="3" class="empty-state">Sin líneas de producto para esta OC.</td></tr>';
@@ -556,7 +566,6 @@ function abrirModalDetalle(ocOdoo) {
   document.getElementById('detalleTotalUSD').textContent = lineas.length
     ? `Total compra: ${formatoUSD(totalUSD)}`
     : '';
-  document.getElementById('modalDetalle').classList.add('open');
 }
 
 // El Web App manda el .xlsx codificado en base64 dentro del JSON de siempre
@@ -609,14 +618,18 @@ async function cargarDatos() {
   bloquearPanelDatos_(true);
   document.getElementById('tablaBody').innerHTML = '<tr><td colspan="28" class="empty-state">Cargando…</td></tr>';
   try {
-    const [maestroData, configData, detalleData] = await Promise.all([
+    // "detalle" YA NO se carga completo acá: con cientos de OC y varias
+    // líneas de producto cada una, el JSON completo se puso tan grande que
+    // Apps Script empezó a fallar al servirlo (404 en el redirect interno de
+    // Google, "No se pudo abrir el archivo") y tumbaba la carga de toda la
+    // página. Ahora se pide solo la OC puntual, bajo demanda, al abrir su
+    // modal de detalle (ver abrirModalDetalle).
+    const [maestroData, configData] = await Promise.all([
       apiGet('maestro'),
-      apiGet('config'),
-      apiGet('detalle')
+      apiGet('config')
     ]);
     maestro = maestroData;
     configNavieras = configData;
-    detalleProductos = detalleData;
     poblarFiltros();
     renderTabla();
     poblarFiltroEmpresaEta();
