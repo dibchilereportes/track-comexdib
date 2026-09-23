@@ -5,7 +5,7 @@
 
 // 1) PEGA AQUÍ la URL de tu Apps Script Web App después de desplegarlo.
 //    Ejemplo: https://script.google.com/macros/s/AKfycb.../exec
-const API_URL = 'https://script.google.com/macros/s/AKfycbwUQWPv0HmdFQPdniOC-qv_yyGMqObFHmY5XutGpqerkE2IBPAsjaFxKJgPg0KtzBhr/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbyWJjpCuURoiOP4u6EQVU7zF5QzoM6wsHztI3iGZlNAKaEvdtBabrhZzKgAjtEKRPZK/exec';
 
 const ESTADOS = [
   'Booking', 'Loaded', 'Departed', 'Transshipment', 'Arrived',
