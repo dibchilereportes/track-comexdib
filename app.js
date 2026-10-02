@@ -102,7 +102,7 @@ function ordenCerradaDeVerdad(c) {
   if (c.ReferenciaSuperada === true || c.ReferenciaSuperada === 'TRUE') return true;
   if (c.EstadoOC === 'cancel' || c.EstadoOC === 'eliminada') return true;
   if (c.EstadoOC !== 'done') return false;
-  const esImportacionAnticipada = String(c.EntregaA || '').trim() === ENTREGA_A_IMPORTACION_ANTICIPADA;
+  const esImportacionAnticipada = String(c.EntregaA || '').trim().replace(/\s+/g, ' ') === ENTREGA_A_IMPORTACION_ANTICIPADA;
   const fechaConf = String(c.FechaConfirmacionOC || '');
   const esReciente = fechaConf >= FECHA_DESDE_IMPORTACION_ANTICIPADA;
   if (esImportacionAnticipada && esReciente && !c.FechaRecepcionDestino) return false;
