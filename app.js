@@ -55,7 +55,12 @@ const ESTADO_OC_LABEL = {
   'sent':        'Solicitud enviada',
   'to approve':  'Por aprobar',
   'purchase':    'Orden de compra',
-  'done':        'Cerrado'
+  'done':        'Cerrado',
+  // No son estados reales de Odoo -los pone verificarOrdenesAusentes_ en
+  // Code.gs cuando una OC deja de aparecer en el sync y, al revisarla
+  // directo, resulta Cancelada o ya no existe en Odoo (alguien la eliminó).
+  'cancel':      'Cancelada en Odoo',
+  'eliminada':   'Eliminada en Odoo'
 };
 
 // Mismo criterio que ordenCerradaDeVerdad_() en Code.gs: una OC de
@@ -72,6 +77,7 @@ function ordenCerradaDeVerdad(c) {
   // con índice de contenedor (misma base, /1, /2...) - queda fuera de las
   // vistas activas sin importar su EstadoOC (ver sincronizarOdooAPI en Code.gs).
   if (c.ReferenciaSuperada === true || c.ReferenciaSuperada === 'TRUE') return true;
+  if (c.EstadoOC === 'cancel' || c.EstadoOC === 'eliminada') return true;
   if (c.EstadoOC !== 'done') return false;
   const esImportacionAnticipada = String(c.EntregaA || '').trim() === ENTREGA_A_IMPORTACION_ANTICIPADA;
   const fechaConf = String(c.FechaConfirmacionOC || '');
