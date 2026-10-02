@@ -42,7 +42,7 @@ const ESTADO_COLOR = {
 
 let maestro = [];
 let configNavieras = [];
-let orden = { campo: 'ETA_Actual', dir: -1 }; // -1 = más nueva primero
+let orden = { campo: 'ETA_Actual', dir: 1 }; // 1 = ETA más próxima a hoy primero (mismo criterio que el Panel Empresas)
 let estadosOCSeleccionados = new Set(); // vacío = "todos"
 let estadosSeleccionados = new Set(); // Estado tracking (EstadoActual) - vacío = "todos"
 let mostrarCerrados = false; // OC en estado 'done' (Cerrado): ya recibidas, fuera del control por defecto
