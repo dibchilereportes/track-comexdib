@@ -89,10 +89,12 @@ const ESTADO_OC_LABEL = {
 // puede quedar Cerrada en Odoo sin haber llegado físicamente al CD -> sigue
 // tratándose como activa hasta que se registre FechaRecepcionDestino a mano.
 const ENTREGA_A_IMPORTACION_ANTICIPADA = 'Importación Anticipada: Recepciones';
-// Mismo rango que Code.gs: solo OC confirmadas dentro de este rango entran a
+// Mismo criterio que Code.gs: solo OC confirmadas DESDE esta fecha entran a
 // la excepción de "importación anticipada" (mantenerse activas aunque Done).
+// Sin fecha de corte superior a propósito -antes la había y al vencerse
+// (2026-08-31) estas OC empezaron a tratarse como cerradas de verdad aunque
+// no hubieran llegado físicamente-.
 const FECHA_DESDE_IMPORTACION_ANTICIPADA = '2026-08-01';
-const FECHA_HASTA_IMPORTACION_ANTICIPADA = '2026-08-31';
 function ordenCerradaDeVerdad(c) {
   // Referencia preliminar (sin /N) ya reemplazada por una o más referencias
   // con índice de contenedor (misma base, /1, /2...) - queda fuera de las
@@ -102,7 +104,7 @@ function ordenCerradaDeVerdad(c) {
   if (c.EstadoOC !== 'done') return false;
   const esImportacionAnticipada = String(c.EntregaA || '').trim() === ENTREGA_A_IMPORTACION_ANTICIPADA;
   const fechaConf = String(c.FechaConfirmacionOC || '');
-  const esReciente = fechaConf >= FECHA_DESDE_IMPORTACION_ANTICIPADA && fechaConf <= FECHA_HASTA_IMPORTACION_ANTICIPADA;
+  const esReciente = fechaConf >= FECHA_DESDE_IMPORTACION_ANTICIPADA;
   if (esImportacionAnticipada && esReciente && !c.FechaRecepcionDestino) return false;
   return true;
 }
