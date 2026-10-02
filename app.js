@@ -43,6 +43,27 @@ const ESTADO_COLOR = {
 let maestro = [];
 let configNavieras = [];
 let orden = { campo: 'ETA_Actual', dir: 1 }; // 1 = ETA más próxima a hoy primero (mismo criterio que el Panel Empresas)
+
+// ---------- Contraseña para acciones de escritura ----------
+// Se pide una sola vez por sesión del navegador (se cachea en memoria, no
+// en el código ni en el navegador) y se manda con cada guardado -el chequeo
+// real ocurre en Code.gs (passwordWebValida_), nunca acá, porque este
+// archivo es público en GitHub Pages y cualquiera puede ver su código.
+let passwordSesion = null;
+function obtenerPassword_() {
+  if (passwordSesion === null) {
+    const p = prompt('Ingresa la contraseña para actualizar registros:');
+    if (!p) return null; // canceló
+    passwordSesion = p;
+  }
+  return passwordSesion;
+}
+// Si el servidor rechaza la contraseña, se limpia la caché para que el
+// próximo intento vuelva a preguntar (si se dejó cacheada una mala, todos
+// los guardados siguientes fallarían en silencio sin esto).
+function olvidarPasswordSiEsError_(err) {
+  if (String(err.message || '').includes('Contraseña incorrecta')) passwordSesion = null;
+}
 let estadosOCSeleccionados = new Set(); // vacío = "todos"
 let estadosSeleccionados = new Set(); // Estado tracking (EstadoActual) - vacío = "todos"
 let mostrarCerrados = false; // OC en estado 'done' (Cerrado): ya recibidas, fuera del control por defecto
@@ -659,6 +680,8 @@ function cerrarModalNuevo() {
 }
 
 async function guardarNuevo() {
+  const password = obtenerPassword_();
+  if (password === null) return; // canceló el prompt, no guarda nada
   const data = {
     Contenedor: document.getElementById('f_contenedor').value.trim(),
     TipoContenedor: document.getElementById('f_tipo').value,
@@ -677,14 +700,20 @@ async function guardarNuevo() {
     FechaLiberacionPOD: document.getElementById('f_fecha_liberacion').value,
     TipoDespacho: document.getElementById('f_tipo_despacho').value,
     EstadoActual: document.getElementById('f_estado').value,
-    Notas: document.getElementById('f_notas').value.trim()
+    Notas: document.getElementById('f_notas').value.trim(),
+    Password: password
   };
   if (!data.Contenedor && !data.MasterBL) {
     alert('Ingresa al menos el número de contenedor o el Master BL.');
     return;
   }
   await conBotonCargando('btnGuardarNuevo', async () => {
-    await apiPost('addContainer', data);
+    try {
+      await apiPost('addContainer', data);
+    } catch (err) {
+      olvidarPasswordSiEsError_(err);
+      throw err;
+    }
     cerrarModalNuevo();
     ['f_contenedor','f_bl','f_booking','f_naviera','f_nave','f_viaje','f_po','f_oc','f_proveedor','f_valor','f_eta','f_notas','f_fecha_liberacion']
       .forEach(id => document.getElementById(id).value = '');
@@ -735,11 +764,14 @@ function cerrarModalEstado() {
 }
 
 async function guardarEstado() {
+  const password = obtenerPassword_();
+  if (password === null) return; // canceló el prompt, no guarda nada
   const estadoData = {
     ID: idEnEdicion,
     EstadoActual: document.getElementById('e_estado').value,
     ETA_Actual: document.getElementById('e_eta').value,
-    Notas: document.getElementById('e_notas').value.trim()
+    Notas: document.getElementById('e_notas').value.trim(),
+    Password: password
   };
   const datosData = {
     ID: idEnEdicion,
@@ -756,14 +788,20 @@ async function guardarEstado() {
     ETA_Original: document.getElementById('e_eta_original').value,
     FechaLiberacionPOD: document.getElementById('e_fecha_liberacion').value,
     TipoDespacho: document.getElementById('e_tipo_despacho').value,
-    FechaRecepcionDestino: document.getElementById('e_fecha_recepcion').value
+    FechaRecepcionDestino: document.getElementById('e_fecha_recepcion').value,
+    Password: password
   };
   await conBotonCargando('btnGuardarEstado', async () => {
-    // En paralelo, no en serie: corta a la mitad el tiempo de espera.
-    await Promise.all([
-      apiPost('updateEstado', estadoData),
-      apiPost('updateContainer', datosData)
-    ]);
+    try {
+      // En paralelo, no en serie: corta a la mitad el tiempo de espera.
+      await Promise.all([
+        apiPost('updateEstado', estadoData),
+        apiPost('updateContainer', datosData)
+      ]);
+    } catch (err) {
+      olvidarPasswordSiEsError_(err);
+      throw err;
+    }
     cerrarModalEstado();
     await cargarDatos();
   });
