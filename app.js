@@ -194,8 +194,8 @@ let mostrarCerradosEta = false;
 // real distinta). Positivo = la carga se atrasó respecto al compromiso
 // original; negativo = se adelantó. null = falta alguna de las dos fechas.
 function diasDesvioEta(c) {
-  if (!c.ETA_Original || !c.ETA_Actual) return null;
-  const original = new Date(c.ETA_Original);
+  if (!c.FechaEsperadaOC || !c.ETA_Actual) return null;
+  const original = new Date(c.FechaEsperadaOC);
   const actual = new Date(c.ETA_Actual);
   if (isNaN(original) || isNaN(actual)) return null;
   return Math.round((actual - original) / 86400000);
